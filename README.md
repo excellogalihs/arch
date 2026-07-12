@@ -258,7 +258,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 # 18. Install Hyprland Desktop & CLI Goodies
 
 ```bash
-pacman -S sddm hyprland hyprpaper kitty waybar rofi dolphin network-manager-applet pipewire pipewire-pulse wireplumber ttf-jetbrains-mono-nerd hyprpolkitagent nvim zsh zsh-autosuggestions zsh-syntax-highlighting starship fastfetch
+pacman -S sddm hyprland hyprpaper kitty waybar rofi dolphin network-manager-applet pipewire pipewire-pulse wireplumber ttf-jetbrains-mono-nerd hyprpolkitagent nvim zsh zsh-autosuggestions zsh-syntax-highlighting fzf starship fastfetch
 ```
 
 | Package | Purpose |
@@ -280,6 +280,7 @@ pacman -S sddm hyprland hyprpaper kitty waybar rofi dolphin network-manager-appl
 | zsh | Interactive shell |
 | zsh-autosuggestions | Autosuggestions |
 | zsh-syntax-highlighting | Syntax highlighting |
+| fzf | Finding files |
 | starship | Cross-shell prompt |
 | fastfetch | System information tool |
 
