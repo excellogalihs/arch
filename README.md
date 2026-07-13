@@ -1,6 +1,6 @@
 # Minimal Arch Linux + Hyprland + SDDM Installation Guide
 
-A minimal Arch Linux installation with **Hyprland**, **SDDM**, and essential desktop utilities.
+A minimal Arch Linux installation with essential desktop utilities.
 
 ## 📋 Goal
 
@@ -239,30 +239,40 @@ grub-mkconfig -o /boot/grub/grub.cfg
 
 # 18. Install Hyprland Desktop & CLI Goodies
 
+Ordered by dependency layer: compositor core → session/login → audio → terminal & shell → status bar & tray → fonts → CLI tools.
+
 ```bash
-pacman -S sddm hyprland hyprpaper kitty waybar yazi network-manager-applet pipewire pipewire-pulse wireplumber ttf-jetbrains-mono-nerd hyprpolkitagent nvim zsh zsh-autosuggestions zsh-syntax-highlighting fzf starship fastfetch
+pacman -S hyprland hyprpaper hyprpolkitagent sddm pipewire pipewire-pulse wireplumber kitty zsh zsh-autosuggestions zsh-syntax-highlighting starship waybar network-manager-applet ttf-jetbrains-mono-nerd nvim yazi fzf bat fastfetch
 ```
 
 | Package | Purpose |
 |---|---|
-| sddm | Graphical login manager |
+| **Compositor core** | |
 | hyprland | Wayland compositor |
 | hyprpaper | Wallpaper manager |
-| kitty | Terminal emulator |
-| waybar | Status bar |
-| yazi | TUI-based file manager |
-| network-manager-applet | Wi-Fi tray applet |
+| hyprpolkitagent | PolicyKit agent |
+| **Session / login** | |
+| sddm | Graphical login manager |
+| **Audio** | |
 | pipewire | Audio server |
 | pipewire-pulse | PulseAudio compatibility |
 | wireplumber | Audio session manager |
-| ttf-jetbrains-mono-nerd | Fonts and icons |
-| hyprpolkitagent | PolicyKit agent |
-| nvim | Modern text editor |
+| **Terminal & shell** | |
+| kitty | Terminal emulator |
 | zsh | Interactive shell |
 | zsh-autosuggestions | Autosuggestions |
 | zsh-syntax-highlighting | Syntax highlighting |
-| fzf | Finding files |
 | starship | Cross-shell prompt |
+| **Status bar & tray** | |
+| waybar | Status bar |
+| network-manager-applet | Wi-Fi tray applet |
+| **Fonts** | |
+| ttf-jetbrains-mono-nerd | Fonts and icons |
+| **CLI tools** | |
+| nvim | Modern text editor |
+| yazi | TUI-based file manager |
+| fzf | Finding files |
+| bat | `cat` with syntax highlighting and Git integration |
 | fastfetch | System information tool |
 
 # 19. Enable Services
