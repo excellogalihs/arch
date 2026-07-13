@@ -4,24 +4,7 @@ A minimal Arch Linux installation with **Hyprland**, **SDDM**, and essential des
 
 ## 📋 Goal
 
-After completing this guide, you will have:
-
-- ✅ Arch Linux
-- ✅ Hyprland
-- ✅ SDDM login screen
-- ✅ Wi-Fi support
-- ✅ Audio support
-- ✅ Waybar
-- ✅ Kitty
-- ✅ Yazi
-- ✅ Wallpapers
-- ✅ Nerd Fonts
-- ✅ Zsh
-- ✅ Zsh Autosuggestions
-- ✅ Zsh Syntax Highlighting
-- ✅ Starship Prompt
-- ✅ Fastfetch
-- ✅ Nvim
+After completing this guide, you will have a ready-to-rice Arch Linux + Hyprland setup.
 
 > No KDE Plasma.
 >
