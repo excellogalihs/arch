@@ -428,6 +428,15 @@ This opens an interactive fuzzy-searchable list of themes with a live preview. P
 
 To browse without applying, use `kitten themes --dump-theme <name>` to preview a theme's colors in your terminal first.
 
+
+```bash
+kitten choose-fonts
+```
+
+This opens a TUI for choosing the fonts in kitty.
+
+**Why?** It makes the kitty terminal better-looking and not too boring.
+
 ---
 
 ## 26. Add Both Zsh Plugins to `.zshrc`
