@@ -624,7 +624,7 @@ Common commands:
 /text     " search forward for "text", n/N to jump next/prev match
 ```
 
-Your config lives at `~/.config/nvim/init.lua`. Since you're already Lua-fluent from `hyprland.lua`, Neovim configuration will feel familiar — it's the same `require()`-based module pattern.
+Your config lives at `~/.config/nvim/init.lua`. 
 
 **Why learn it now?** Because neovim is a super powerful text editor with an infinite amount of tricks.
 
@@ -700,3 +700,7 @@ alias search='nvim $(fzf)'
 | `alias search='nvim $(fzf)'` | Fuzzy-find a file with fzf, then open whatever you picked directly in nvim — one command instead of two. |
 
 **A tip on ordering**: the two plugin `source` lines should come *before* the `HISTFILE`/`setopt`/`alias` lines conceptually (though it won't break anything if they don't) — plugins react to keybindings and line-editor state, while history settings and aliases are just shell state, so keeping plugin setup grouped together near the top makes the file easier to scan later.
+
+---
+
+And now you have a ready-to-use Arch Linux + Hyprland setup.
