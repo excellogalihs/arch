@@ -12,9 +12,8 @@ After completing this guide, you will have:
 - ✅ Wi-Fi support
 - ✅ Audio support
 - ✅ Waybar
-- ✅ Rofi
 - ✅ Kitty
-- ✅ Dolphin
+- ✅ Yazi
 - ✅ Wallpapers
 - ✅ Nerd Fonts
 - ✅ Zsh
@@ -141,7 +140,7 @@ pacstrap /mnt base linux linux-firmware
 # 7. Install Essential Packages
 
 ```bash
-pacstrap /mnt networkmanager grub efibootmgr sudo nvim zsh
+pacstrap /mnt networkmanager grub efibootmgr sudo nvim
 ```
 
 | Package | Purpose |
@@ -258,7 +257,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 # 18. Install Hyprland Desktop & CLI Goodies
 
 ```bash
-pacman -S sddm hyprland hyprpaper kitty waybar rofi dolphin network-manager-applet pipewire pipewire-pulse wireplumber ttf-jetbrains-mono-nerd hyprpolkitagent nvim zsh zsh-autosuggestions zsh-syntax-highlighting fzf starship fastfetch
+pacman -S sddm hyprland hyprpaper kitty waybar yazi network-manager-applet pipewire pipewire-pulse wireplumber ttf-jetbrains-mono-nerd hyprpolkitagent nvim zsh zsh-autosuggestions zsh-syntax-highlighting fzf starship fastfetch
 ```
 
 | Package | Purpose |
@@ -268,8 +267,7 @@ pacman -S sddm hyprland hyprpaper kitty waybar rofi dolphin network-manager-appl
 | hyprpaper | Wallpaper manager |
 | kitty | Terminal emulator |
 | waybar | Status bar |
-| rofi | Application launcher |
-| dolphin | File manager |
+| yazi | TUI-based file manager |
 | network-manager-applet | Wi-Fi tray applet |
 | pipewire | Audio server |
 | pipewire-pulse | PulseAudio compatibility |
