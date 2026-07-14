@@ -679,7 +679,7 @@ HISTFILE=~/.zsh_history
 HISTSIZE=10000
 SAVEHIST=10000
 setopt SHARE_HISTORY
-setopt HIST_IGNORE_DUPS
+setopt HIST_IGNORE_ALL_DUPS
 alias update='sudo pacman -Syu'
 alias search='nvim $(fzf)'
 ```
@@ -695,7 +695,7 @@ alias search='nvim $(fzf)'
 | `HISTSIZE=10000` | How many history entries zsh keeps loaded in memory at once. |
 | `SAVEHIST=10000` | How many history entries actually get written to `HISTFILE`. Usually matched to `HISTSIZE`. |
 | `setopt SHARE_HISTORY` | Makes every open terminal share the same live history — a command run in one tab shows up immediately when you press `↑` in another. |
-| `setopt HIST_IGNORE_DUPS` | Skips saving a command to history if it's identical to the one immediately before it (keeps history from filling up with repeated `ls`, `cd ..`, etc). |
+| `setopt HIST_IGNORE_ALL_DUPS` | Skips saving a command to history if it's identical to the one immediately before it (keeps history from filling up with repeated `ls`, `cd ..`, etc). |
 | `alias update='sudo pacman -Syu'` | Shortcut: type `update` instead of the full pacman sync/upgrade command. |
 | `alias search='nvim $(fzf)'` | Fuzzy-find a file with fzf, then open whatever you picked directly in nvim — one command instead of two. |
 
