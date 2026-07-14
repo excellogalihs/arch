@@ -511,23 +511,17 @@ Use the arrow keys or type to search, preview a theme live, and press `Enter` to
 
 After picking one, either restart kitty or reload it live with `Ctrl+Shift+F5`.
 
----
-
-## 26. Make Sure Zsh Is Your Default Shell
-
-You already told `useradd` to use zsh back in Step 15, but it's worth confirming:
-
 ```bash
-chsh -s /usr/bin/zsh
+kitten choose-fonts
 ```
 
-Log out and back in for it to take effect everywhere.
+**Why?** It makes the terminal more comfortable and futuristic.
 
-**Why?** `chsh` ("change shell") edits `/etc/passwd`, which is what decides which shell greets you the moment you open any terminal — separate from anything inside `.zshrc`.
+After selecting a font, you can restart kitty.
 
 ---
 
-## 27. Add Both Zsh Plugins
+## 26. Add Both Zsh Plugins
 
 Open your zsh config:
 
@@ -550,7 +544,7 @@ source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zs
 
 ---
 
-## 28. Choose a Starship Prompt Preset
+## 27. Choose a Starship Prompt Preset
 
 Starship comes with several ready-made prompt styles so you don't have to design one from scratch.
 
@@ -576,7 +570,7 @@ eval "$(starship init zsh)"
 
 ---
 
-## 29. A Minimal Waybar Setup That Actually Works
+## 28. A Minimal Waybar Setup That Actually Works
 
 Waybar reads two files: `~/.config/waybar/config.jsonc` (what to show) and `~/.config/waybar/style.css` (how it looks).
 
@@ -672,7 +666,7 @@ hl.exec_cmd("waybar")
 
 ---
 
-## 30. Connect to Wi-Fi Day-to-Day with `nmtui`
+## 29. Connect to Wi-Fi Day-to-Day with `nmtui`
 
 ```bash
 nmtui
@@ -695,7 +689,7 @@ nmcli device status
 
 ---
 
-## 31. Neovim Basics
+## 30. Neovim Basics
 
 `nvim` has a few different "modes" — this trips up a lot of first-timers coming from Notepad-style editors, so here's the short version:
 
@@ -724,7 +718,7 @@ Its own config lives at `~/.config/nvim/init.lua` — also Lua, so the skills ca
 
 ---
 
-## 32. Yazi Basics
+## 31. Yazi Basics
 
 Yazi is a terminal-based file manager — think of it as a fast, keyboard-driven alternative to a Files/Finder window.
 
@@ -746,7 +740,7 @@ yazi
 
 ---
 
-## 33. fzf's Hidden Superpowers, and Building Out `.zshrc`
+## 32. fzf's Hidden Superpowers, and Building Out `.zshrc`
 
 Once fzf is sourced into your shell, it adds keyboard shortcuts that work anywhere on the command line:
 
