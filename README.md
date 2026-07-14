@@ -1,19 +1,51 @@
-# Minimal Arch Linux + Hyprland + SDDM Installation Guide
-A minimal Arch Linux installation with essential desktop utilities.
-## 📋 Goal
-After completing this guide, you will have a ready-to-use Arch Linux + Hyprland setup.
-> No KDE Plasma.
->
-> No GNOME.
->
-> No giant dotfile installers.
+# Arch Linux + Hyprland Installation Guide (for First-Timers)
+
+This guide walks you from a blank drive to a fully working **Arch Linux + Hyprland** desktop — no prior Arch experience needed.
+
+> **New to Arch?** Unlike Ubuntu or Fedora, Arch doesn't hold your hand — there's no graphical installer, no desktop pre-installed, and no "click Next 5 times" setup. You install it piece by piece from a terminal, which sounds scary but is actually just typing one command at a time and reading what it tells you. This guide explains **what each command does and why**, not just what to type.
+
+## How to read this guide
+
+- 🔧 **Command blocks** are things you type into the terminal, exactly as shown (swap out placeholders like `sdX` for your actual drive name).
+- 💡 **Tip** boxes give optional but useful advice.
+- ⚠️ **Warning** boxes flag things that can break your system if rushed.
+- Every step ends with a **Why?** explanation in plain English — read these even if you just copy-paste the commands.
+
+## What you'll need
+
+- A USB drive (4GB+) with the Arch Linux ISO already flashed onto it (using a tool like [Rufus](https://rufus.ie))
+- A working internet connection (Wi-Fi or Ethernet)
+- About an hour, and a willingness to read error messages instead of panicking at them
+
+## A few words you'll see a lot
+
+| Term | What it means |
+|---|---|
+| **Live USB / Live environment** | The temporary Arch system running off your USB drive, before anything is installed to the actual computer |
+| **Partition** | A section of your hard drive, like dividing one drawer into two compartments |
+| **Mount** | Making a partition accessible at a specific folder path, so you can read/write to it |
+| **Chroot** | "Change root" — jumping from the temporary live USB environment *into* the system you're installing, as if you'd already booted into it |
+| **Bootloader** | The program that runs first when you power on, and hands control to the Linux kernel (we're using GRUB) |
+| **Compositor** | The program that draws windows on screen and manages your desktop (Hyprland, in our case) |
+
+Everything below assumes you've already booted from the Arch ISO and you're staring at a terminal prompt that looks like `root@archiso ~ #`.
+
 ---
-# 1. Connect to the Internet
-Test your connection:
+
+# Part 1 — Installing Arch Linux
+
+## 1. Connect to the Internet
+
+First, check whether you're already online:
+
 ```bash
 ping archlinux.org
 ```
-If using Wi-Fi:
+
+If you see replies coming back (lines with `bytes from`), you're connected — press `Ctrl+C` to stop the ping and skip to Step 2.
+
+If you're on Wi-Fi and see nothing, connect manually with `iwctl` (Arch's built-in Wi-Fi tool):
+
 ```bash
 iwctl
 device list
@@ -22,221 +54,385 @@ station wlan0 get-networks
 station wlan0 connect "YOUR_WIFI_NAME"
 exit
 ```
-**Why?**
-Arch downloads packages directly from online repositories.
+
+> 💡 **Tip:** `device list` shows your Wi-Fi adapter's name — it's usually `wlan0`, but double-check it matches what's listed before continuing.
+
+**Why?** The installer doesn't come with anything pre-downloaded — every package (the base system, the kernel, your desktop) is fetched live from Arch's servers. No internet, no install.
+
 ---
-# 2. Find Your Drive
+
+## 2. Find Your Drive
+
 ```bash
 lsblk
 ```
-Example:
+
+This lists every storage device attached to your computer, something like:
+
 ```text
-sda
-nvme0n1
+sda        238.5G  ← an external or secondary drive
+nvme0n1    476.9G  ← usually your main internal SSD
 ```
-**Why?**
-Shows all storage devices connected to your computer. Make sure you choose the correct drive.
+
+> ⚠️ **Warning:** Getting this wrong means installing Arch over the wrong drive and losing its data. Check the size (`238.5G`, `476.9G`, etc.) against what you know about your hardware before moving on. If unsure, unplug any drive you don't want touched.
+
+**Why?** You need to tell the installer exactly which physical drive to use — it won't guess for you.
+
 ---
-# 3. Partition the Drive
+
+## 3. Partition the Drive
+
 ```bash
 cfdisk /dev/sdX
 ```
-Create:
-| Partition | Size |
-|---|---:|
-| EFI System | 512 MB |
-| Linux Filesystem | Remaining Space |
-Select **Write → Yes → Quit**.
-**Why?**
-EFI stores boot files. Linux Filesystem stores Arch Linux and your files.
+
+Replace `sdX` with your actual drive name from Step 2 (e.g. `/dev/sda` or `/dev/nvme0n1`).
+
+Inside `cfdisk`, create two partitions:
+
+| Partition | Size | Type |
+|---|---:|---|
+| EFI System | 512 MB | EFI System |
+| Linux Filesystem | Remaining space | Linux filesystem |
+
+Use the arrow keys to navigate, `[New]` to create a partition, and set the **EFI System** type on the first one. When done, select **[Write]** → type `yes` to confirm → **[Quit]**.
+
+**Why?** The EFI partition stores the small files your motherboard's firmware needs to find and start Linux. The second, much larger partition is where Arch itself and all your files will actually live.
+
 ---
-# 4. Format Partitions
+
+## 4. Format the Partitions
+
 ```bash
 mkfs.fat -F32 /dev/sdX1
 mkfs.ext4 /dev/sdX2
 ```
-**Why?**
-Formats the EFI and Linux partitions.
+
+`sdX1` is your EFI partition, `sdX2` is your Linux filesystem partition (match the numbers `cfdisk` showed you).
+
+**Why?** Creating partitions just draws the boundaries — formatting is what actually lays down a filesystem (a way of organizing files) inside each one. FAT32 is required for the EFI partition by the UEFI standard; ext4 is Linux's reliable, general-purpose filesystem.
+
 ---
-# 5. Mount Partitions
+
+## 5. Mount the Partitions
+
 ```bash
 mount /dev/sdX2 /mnt
 mkdir /mnt/boot
 mount /dev/sdX1 /mnt/boot
 ```
-**Why?**
-Tells the installer where Arch Linux should be installed.
+
+**Why?** "Mounting" tells the live environment: *"when I write to `/mnt`, actually write to this partition."* The installer (`pacstrap`, next step) only knows how to install to `/mnt` — mounting is what connects that folder to your real drive.
+
 ---
-# 6. Install the Base System
+
+## 6. Install the Base System
+
 ```bash
 pacstrap /mnt base linux linux-firmware
 ```
+
 | Package | Purpose |
 |---|---|
-| base | Essential Linux utilities |
-| linux | Linux kernel |
-| linux-firmware | Firmware for hardware devices |
+| `base` | The essential command-line tools every Arch system needs |
+| `linux` | The Linux kernel — the core that talks to your hardware |
+| `linux-firmware` | Extra firmware files many devices (Wi-Fi cards, GPUs) need to function |
+
+**Why?** This is the actual "installation" step — everything before this was just preparing empty space. This one command downloads and copies a minimal, bootable Linux system onto your drive.
+
 ---
-# 7. Install Essential Packages
+
+## 7. Install Essential Packages
+
 ```bash
 pacstrap /mnt networkmanager grub efibootmgr sudo nvim
 ```
+
 | Package | Purpose |
 |---|---|
-| networkmanager | Networking and Wi-Fi |
-| grub | Bootloader |
-| efibootmgr | Registers GRUB with UEFI |
-| sudo | Administrative privileges |
-| nvim | Modern text editor |
-| zsh | Interactive shell |
+| `networkmanager` | Handles Wi-Fi and Ethernet once you're no longer on the live USB |
+| `grub` | The bootloader — what actually boots into your new system |
+| `efibootmgr` | Registers GRUB with your motherboard's UEFI firmware |
+| `sudo` | Lets your regular user run administrator-level commands when needed |
+| `nvim` | A text editor for editing config files (you'll use this constantly) |
+
+**Why?** The base system from Step 6 is deliberately minimal — it can't even connect to Wi-Fi or boot on its own yet. These packages fill in those gaps.
+
 ---
-# 8. Generate fstab
+
+## 8. Generate the Filesystem Table (fstab)
+
 ```bash
 genfstab -U /mnt >> /mnt/etc/fstab
 ```
-**Why?** Generates the filesystem table.
+
+**Why?** `fstab` is a file that tells Linux which partition to mount where, every time it boots. `genfstab` writes this automatically based on how you mounted things in Step 5 — you'd otherwise have to write it by hand.
+
 ---
-# 9. Enter the Installed System
+
+## 9. Enter Your New System (chroot)
+
 ```bash
 arch-chroot /mnt
 ```
+
+**Why?** So far you've been working *from* the live USB, treating `/mnt` as a subfolder. `arch-chroot` jumps you *inside* the system you just installed, so from here on, commands run as if you'd actually booted into your new Arch install — because for all practical purposes, you now have.
+
 ---
-# 10. Set Timezone
+
+## 10. Set Your Timezone
+
 ```bash
 ln -sf /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
 hwclock --systohc
 ```
+
+Replace `Asia/Jakarta` with your own region — run `ls /usr/share/zoneinfo` to browse available options.
+
+**Why?** This tells Linux what time zone to display clocks in, and syncs your hardware clock so the time stays correct after reboot.
+
 ---
-# 11. Configure Locale
+
+## 11. Configure Your Locale
+
 ```bash
 nvim /etc/locale.gen
 ```
-Uncomment:
-```text
-en_US.UTF-8 UTF-8
-```
+
+Find the line `#en_US.UTF-8 UTF-8` and remove the `#` at the start to uncomment it. Save and quit (`:wq`).
+
 Then:
+
 ```bash
 locale-gen
 echo "LANG=en_US.UTF-8" > /etc/locale.conf
 ```
+
+**Why?** "Locale" controls language, character encoding, and formatting (dates, currency, etc.) system-wide. Uncommenting a locale in `locale.gen` tells Arch to actually generate that language pack; `locale.conf` tells the system which one to use by default.
+
 ---
-# 12. Set Hostname
+
+## 12. Set Your Hostname
+
 ```bash
 echo "arch" > /etc/hostname
 ```
+
+**Why?** The hostname is your machine's name on a network — useful for identifying it, especially if you have more than one computer around.
+
 ---
-# 13. Configure Hosts
+
+## 13. Configure Hosts File
+
 ```bash
 nvim /etc/hosts
 ```
-Add:
+
+Add these three lines:
+
 ```text
 127.0.0.1 localhost
 ::1 localhost
 127.0.1.1 arch.localdomain arch
 ```
+
+**Why?** This lets your own machine resolve its own hostname locally, without needing to ask a DNS server — some programs expect this to work even with no internet.
+
 ---
-# 14. Set Root Password
+
+## 14. Set the Root Password
+
 ```bash
 passwd
 ```
-# 15. Create a User
+
+You'll be prompted to type a password twice (it won't show on screen — that's normal).
+
+**Why?** `root` is Arch's built-in administrator account. Right now it has no password at all, which is a security hole you're closing here.
+
+---
+
+## 15. Create Your Own User Account
+
 ```bash
 useradd -m -G wheel -s /bin/zsh excello
 passwd excello
 ```
-# 16. Enable sudo
+
+Replace `excello` with whatever username you want.
+
+**Why?** You shouldn't do your daily computing as `root` — one typo could wreck your whole system. `-m` creates a home folder for this user, `-G wheel` puts them in the `wheel` group (needed for admin permissions, next step), and `-s /bin/zsh` sets zsh as their shell from the start.
+
+---
+
+## 16. Enable `sudo` for Your User
+
 ```bash
 EDITOR=nvim visudo
 ```
-Uncomment `%wheel ALL=(ALL:ALL) ALL`.
-# 17. Install GRUB
+
+Find the line `# %wheel ALL=(ALL:ALL) ALL` and remove the `#`. Save and quit.
+
+> ⚠️ **Warning:** Always edit this file with `visudo`, never a plain text editor — it checks your syntax before saving, so a typo can't lock you out of `sudo` entirely.
+
+**Why?** This tells Linux "anyone in the `wheel` group can use `sudo`." Since your user is in `wheel` (Step 15), this is what lets you run admin commands like `sudo pacman -Syu` instead of switching to `root` every time.
+
+---
+
+## 17. Install the Bootloader (GRUB)
+
 ```bash
 grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
 grub-mkconfig -o /boot/grub/grub.cfg
 ```
-# 18. Install Hyprland Desktop & CLI Goodies
-Ordered by dependency layer: compositor core → session/login → audio → terminal & shell → status bar & tray → fonts → CLI tools.
+
+**Why?** Installing the `grub` package (Step 7) only put the program on disk — these two commands actually register it with your UEFI firmware and generate its boot menu configuration. Without this, your computer has no idea how to start Linux at all.
+
+---
+
+## 18. Install Hyprland and Desktop Essentials
+
 ```bash
 pacman -S hyprland hyprpaper hyprpolkitagent sddm pipewire pipewire-pulse wireplumber kitty zsh zsh-autosuggestions zsh-syntax-highlighting starship waybar network-manager-applet ttf-jetbrains-mono-nerd nvim yazi fzf bat fastfetch
 ```
+
+Grouped by what each thing does:
+
+**Desktop itself**
 | Package | Purpose |
 |---|---|
-| **Compositor core** | |
-| hyprland | Wayland compositor |
-| hyprpaper | Wallpaper manager |
-| hyprpolkitagent | PolicyKit agent |
-| **Session / login** | |
-| sddm | Graphical login manager |
-| **Audio** | |
-| pipewire | Audio server |
-| pipewire-pulse | PulseAudio compatibility |
-| wireplumber | Audio session manager |
-| **Terminal & shell** | |
-| kitty | Terminal emulator |
-| zsh | Interactive shell |
-| zsh-autosuggestions | Autosuggestions |
-| zsh-syntax-highlighting | Syntax highlighting |
-| starship | Cross-shell prompt |
-| **Status bar & tray** | |
-| waybar | Status bar |
-| network-manager-applet | Wi-Fi tray applet |
-| **Fonts** | |
-| ttf-jetbrains-mono-nerd | Fonts and icons |
-| **CLI tools** | |
-| nvim | Modern text editor |
-| yazi | TUI-based file manager |
-| fzf | Finding files |
-| bat | `cat` with syntax highlighting and Git integration |
-| fastfetch | System information tool |
-# 19. Enable Services
+| `hyprland` | The Wayland compositor — this *is* your desktop environment |
+| `hyprpaper` | Sets your wallpaper |
+| `hyprpolkitagent` | Handles password prompts for admin actions triggered from GUI apps |
+
+**Login screen**
+| Package | Purpose |
+|---|---|
+| `sddm` | The graphical login screen you'll see on every boot |
+
+**Audio**
+| Package | Purpose |
+|---|---|
+| `pipewire` | Modern Linux audio server |
+| `pipewire-pulse` | Compatibility layer so apps expecting PulseAudio still work |
+| `wireplumber` | Manages audio devices and routing behind the scenes |
+
+**Terminal & shell**
+| Package | Purpose |
+|---|---|
+| `kitty` | A fast, GPU-accelerated terminal emulator |
+| `zsh` | An alternative shell to `bash`, with more features |
+| `zsh-autosuggestions` | Ghost-text command suggestions as you type |
+| `zsh-syntax-highlighting` | Colors commands as valid/invalid while typing |
+| `starship` | A customizable, informative shell prompt |
+
+**Bar & tray**
+| Package | Purpose |
+|---|---|
+| `waybar` | The status bar along the top/bottom of your screen |
+| `network-manager-applet` | A Wi-Fi icon/menu in your tray |
+
+**Fonts**
+| Package | Purpose |
+|---|---|
+| `ttf-jetbrains-mono-nerd` | A coding font patched with icons (needed for waybar/kitty icons to render) |
+
+**CLI tools**
+| Package | Purpose |
+|---|---|
+| `nvim` | Text editor |
+| `yazi` | Terminal file manager |
+| `fzf` | Fuzzy finder for files, history, and more |
+| `bat` | A nicer `cat`, with syntax highlighting |
+| `fastfetch` | Prints a system-info summary with ASCII art |
+
+> 💡 **Tip:** This one command installs everything at once. If it fails partway through (e.g. a mirror timing out), just re-run the same command — `pacman` skips anything already installed.
+
+**Why this order?** Each layer depends on the one above it conceptually: the compositor needs to exist before a login manager can launch it, audio needs to exist before a terminal cares about it, and fonts need to be present before the bar/terminal can render icons correctly. Installing in this order isn't strictly required by `pacman`, but it mirrors the order you'll actually configure things in Part 2.
+
+---
+
+## 19. Enable Background Services
+
 ```bash
 systemctl enable NetworkManager
 systemctl enable sddm
 ```
-# 20. Finish
+
+**Why?** Installing a package doesn't automatically make it start on boot — `systemctl enable` is what schedules a service to launch every time you power on. Without this, you'd have no networking and no login screen after rebooting.
+
+---
+
+## 20. Finish Up
+
 ```bash
 exit
 umount -R /mnt
 poweroff
 ```
-Remove the USB drive.
-# 21. First Boot
+
+Once it powers off, physically remove your USB drive.
+
+**Why?** `exit` leaves the chroot environment, `umount -R /mnt` safely detaches your new system's partitions (skipping this can corrupt files), and `poweroff` shuts the machine down cleanly so you can boot from the actual drive next.
+
+---
+
+## 21. First Boot
+
 ```text
-Power Button
-↓
-UEFI
-↓
-GRUB
-↓
-SDDM
-↓
-Hyprland
-↓
-Desktop
+Power Button → UEFI → GRUB → SDDM → Hyprland → Desktop
 ```
+
+If you land on the SDDM login screen, log in with the user you created in Step 15. You should land on a mostly-empty Hyprland desktop — that's expected. Part 2 turns it from "working" into "yours."
+
 ---
-# Post-Installation Configuration
-You're now on the desktop. Time to make everything actually work and look right.
+
+# Part 2 — Post-Installation Configuration
+
+You're on the desktop now. Everything below is about making things look and behave the way you want, one piece at a time.
+
+> 💡 **A recurring pattern:** most of these programs read their settings from a plain text file under `~/.config/`. You'll open that file in `nvim`, change something, save, and often the change applies immediately (or after a quick reload command) — no restarting the whole desktop needed.
+
 ---
+
 ## 22. Clean Up `hyprland.lua`
-Since Hyprland 0.55, config is Lua, not the old `hyprland.conf` syntax. On first launch, Hyprland auto-generates `~/.config/hypr/hyprland.lua` and shows a yellow warning banner because of this line near the top:
-```lua
-hl.config({ autogenerated = true })
-```
-Open the file:
+
+Hyprland's config file lives at `~/.config/hypr/hyprland.lua` and is written in **Lua** (a small, readable scripting language), not a special Hyprland-only format.
+
+Open it:
+
 ```bash
 nvim ~/.config/hypr/hyprland.lua
 ```
-Delete that line (or the whole block containing it). That's what tells Hyprland "this is a fresh, untouched config" — removing it silences the banner and tells Hyprland you now own this file.
-**Why?** The autogenerated flag exists purely to nag you into customizing the default config. Once you've started editing, it has no purpose.
+
+Near the top you'll see this line:
+
+```lua
+hl.config({ autogenerated = true })
+```
+
+Delete that entire line. It's the only thing causing the yellow "unmodified config" warning banner you'll see on your desktop right now.
+
+**Why?** Hyprland auto-generates this file the first time it runs, and flags it as untouched so you know to customize it. Once you've started editing (which you're doing right now), that flag no longer serves a purpose.
+
+> 💡 **Tip:** As this file grows, you can split it into smaller files and pull them in with Lua's `require()`:
+> ```lua
+> require("modules.keybinds")  -- loads ~/.config/hypr/modules/keybinds.lua
+> ```
+> Each file loads in its own little sandbox, so a mistake in one won't break the rest.
+
 ---
-## 23. Configure Hyprpaper
-Hyprpaper's config lives at `~/.config/hypr/hyprpaper.conf` and is optional (it can also be driven entirely over IPC), but a static config is the simplest way to set a wallpaper on boot.
+
+## 23. Set a Wallpaper with Hyprpaper
+
+Hyprpaper's config lives at `~/.config/hypr/hyprpaper.conf`.
+
 ```bash
 nvim ~/.config/hypr/hyprpaper.conf
 ```
+
+Add:
+
 ```ini
 wallpaper {
     monitor = DP-3
@@ -244,261 +440,327 @@ wallpaper {
     fit_mode = cover
 }
 ```
-| Field | Purpose |
+
+| Field | Meaning |
 |---|---|
-| monitor | Target output (see `hyprctl monitors` for names, e.g. `eDP-1`, `DP-1`). Leave blank for a fallback wallpaper that applies to any monitor without an explicit assignment. |
-| path | Path to the image. `~` is supported, but if you hit issues, use the full path instead. |
-| fit_mode | `cover`, `contain`, `tile`, or `fill`. Defaults to `cover` if omitted. |
-For multiple monitors, just stack more blocks:
+| `monitor` | Which screen this applies to. Run `hyprctl monitors` in a terminal to see your monitor's real name (e.g. `eDP-1` for a laptop screen). Leave it blank for a fallback that covers any monitor without a specific entry. |
+| `path` | The image file to use. |
+| `fit_mode` | How the image fills the screen: `cover` (fill and crop), `contain` (fit without cropping), `tile`, or `fill` (stretch). Defaults to `cover`. |
+
+Got two monitors? Just add a second block:
+
 ```ini
 wallpaper {
     monitor = DP-3
     path = ~/Pictures/wall1.jxl
     fit_mode = cover
 }
+
 wallpaper {
     monitor = DP-2
     path = ~/Pictures/wall2.jxl
     fit_mode = cover
 }
-wallpaper {
-    monitor =
-    path = ~/Pictures/fallback.jxl
-    fit_mode = cover
-}
 ```
-To launch hyprpaper on startup, add this to `hyprland.lua`:
+
+To make hyprpaper start automatically every login, add this line to `hyprland.lua` (from Step 22):
+
 ```lua
 hl.exec_cmd("hyprpaper")
 ```
-After editing the config, reload without restarting hyprpaper:
+
+If you change the wallpaper config later without restarting anything:
+
 ```bash
 hyprctl hyprpaper reload
 ```
+
 ---
-## 24. Configure `hyprpolkitagent`
-Polkit handles authentication prompts for privileged actions (mounting drives, updating system settings from a GUI, etc). Without an agent running, those prompts just silently fail.
-Add it to your autostart in `hyprland.lua`:
+
+## 24. Turn On `hyprpolkitagent`
+
+This one has no config file — it just needs to be *running*. It's what lets password prompts actually appear when a graphical app asks for admin permission (installing something with a GUI, mounting a drive, etc).
+
+Add this to `hyprland.lua`, alongside the hyprpaper line from Step 23:
+
 ```lua
 hl.exec_cmd("hyprpolkitagent")
 ```
-**Why?** It needs to start once per session, early, so it's ready before anything asks for authentication. There's no separate config file to edit — it works out of the box once it's running.
-Verify it's alive:
+
+Check it's running:
+
 ```bash
 pgrep -a hyprpolkitagent
 ```
+
+If that prints a line with a process ID, it's working.
+
 ---
-## 25. Change Kitty's Theme with `kitten themes`
-Kitty ships a built-in theme picker:
+
+## 25. Pick a Kitty Theme
+
+Kitty (your terminal) has a built-in theme browser — no config file editing required:
+
 ```bash
 kitten themes
 ```
-This opens an interactive fuzzy-searchable list of themes with a live preview. Pick one with `Enter`.
-**Why?** It writes the theme directly into `~/.config/kitty/current-theme.conf` and adds an `include` line to your `kitty.conf` — no manual editing needed. Restart kitty (or press `ctrl+shift+F5` to reload the config) to see it applied.
-To browse without applying, use `kitten themes --dump-theme <name>` to preview a theme's colors in your terminal first.
-```bash
-kitten choose-fonts
-```
-This opens a TUI for choosing the fonts in kitty.
-**Why?** It makes the kitty terminal better-looking and not too boring.
+
+Use the arrow keys or type to search, preview a theme live, and press `Enter` to apply it.
+
+**Why does this "just work"?** Behind the scenes it saves the theme to `~/.config/kitty/current-theme.conf` and quietly links it into your `kitty.conf` for you.
+
+After picking one, either restart kitty or reload it live with `Ctrl+Shift+F5`.
+
 ---
-## 26. Add Both Zsh Plugins to `.zshrc`
+
+## 26. Make Sure Zsh Is Your Default Shell
+
+You already told `useradd` to use zsh back in Step 15, but it's worth confirming:
+
+```bash
+chsh -s /usr/bin/zsh
+```
+
+Log out and back in for it to take effect everywhere.
+
+**Why?** `chsh` ("change shell") edits `/etc/passwd`, which is what decides which shell greets you the moment you open any terminal — separate from anything inside `.zshrc`.
+
+---
+
+## 27. Add Both Zsh Plugins
+
+Open your zsh config:
+
 ```bash
 nvim ~/.zshrc
 ```
-Add:
+
+Add these two lines:
+
 ```bash
 source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 ```
-**Order matters**: `zsh-syntax-highlighting` should generally be sourced *last* in your `.zshrc`, after other plugins, because it wraps zsh's line-editor widgets — sourcing something after it can break the highlighting.
-**Why?**
-- `zsh-autosuggestions` shows a greyed-out suggestion as you type, based on your history — press `→` (right arrow) to accept it.
-- `zsh-syntax-highlighting` colors valid commands green and invalid ones red as you type, so typos are visible before you hit Enter.
+
+> ⚠️ **Order matters:** keep `zsh-syntax-highlighting` sourced *last* among your plugins — it hooks deeply into how zsh handles what you type, and other plugins loaded after it can quietly break the highlighting.
+
+**What each one actually does:**
+- **zsh-autosuggestions** — as you type, it shows a faint, greyed-out guess of the rest of the command based on your history. Press the `→` right-arrow key to accept it.
+- **zsh-syntax-highlighting** — colors what you're typing green if it's a valid, runnable command, and red if it isn't — so you catch typos before hitting Enter.
+
 ---
-## 27. Pick and Enable a Starship Preset
-Starship ships several built-in presets (Nerd Font symbols, minimalist, Pastel Powerline, etc). List them:
+
+## 28. Choose a Starship Prompt Preset
+
+Starship comes with several ready-made prompt styles so you don't have to design one from scratch.
+
+See what's available:
+
 ```bash
 starship preset --list
 ```
-Preview and save one, for example the Nerd Font Symbols preset:
+
+Save one as your active config — for example, the Nerd Font icons preset:
+
 ```bash
 starship preset nerd-font-symbols -o ~/.config/starship.toml
 ```
-Then enable Starship in `.zshrc` (covered again in step 33):
+
+Then make sure Starship is actually turned on (this line is also covered in Step 33's full `.zshrc` walkthrough):
+
 ```bash
 eval "$(starship init zsh)"
 ```
-**Why?** `starship preset <name> -o <file>` writes a ready-made `starship.toml` so you don't have to hand-build a prompt config. You can always tweak individual fields in that file afterward.
+
+**Why?** `starship preset <name> -o <file>` writes a complete, working `starship.toml` for you. You can open that file later in `nvim` and tweak individual pieces once you know what you like.
+
 ---
-## 28. A Minimal Working Waybar Config
-Waybar reads `~/.config/waybar/config.jsonc` and `~/.config/waybar/style.css`.
+
+## 29. A Minimal Waybar Setup That Actually Works
+
+Waybar reads two files: `~/.config/waybar/config.jsonc` (what to show) and `~/.config/waybar/style.css` (how it looks).
+
 ```bash
 mkdir -p ~/.config/waybar
 nvim ~/.config/waybar/config.jsonc
 ```
+
 ```jsonc
 {
     "layer": "top",
     "position": "top",
     "height": 32,
     "spacing": 4,
+
     "modules-left": ["hyprland/workspaces"],
     "modules-center": ["clock"],
     "modules-right": ["network", "pulseaudio", "battery", "tray"],
+
     "hyprland/workspaces": {
         "format": "{icon}",
         "on-click": "activate"
     },
+
     "clock": {
         "format": "{:%H:%M   %a %d %b}"
     },
+
     "network": {
         "format-wifi": "  {essid}",
         "format-ethernet": "  Connected",
         "format-disconnected": "⚠ Offline"
     },
+
     "pulseaudio": {
         "format": "{icon}  {volume}%",
         "format-icons": ["", "", ""],
         "on-click": "pavucontrol"
     },
+
     "battery": {
         "format": "{icon}  {capacity}%",
         "format-icons": ["", "", "", "", ""]
     },
+
     "tray": {
         "spacing": 8
     }
 }
 ```
+
+Then the styling:
+
 ```bash
 nvim ~/.config/waybar/style.css
 ```
+
 ```css
 * {
     font-family: "JetBrainsMono Nerd Font";
     font-size: 13px;
     min-height: 0;
 }
+
 window#waybar {
     background-color: rgba(20, 20, 30, 0.85);
     color: #cdd6f4;
 }
+
 #workspaces button {
     padding: 0 8px;
     color: #cdd6f4;
 }
+
 #workspaces button.active {
     background-color: #89b4fa;
     color: #1e1e2e;
     border-radius: 6px;
 }
+
 #clock, #network, #pulseaudio, #battery, #tray {
     padding: 0 10px;
 }
 ```
-Launch it on startup by adding this to `hyprland.lua`:
+
+Make it launch automatically by adding this to `hyprland.lua`:
+
 ```lua
 hl.exec_cmd("waybar")
 ```
-**Why this shape?** `modules-left/center/right` map directly to the three visual zones of the bar — workspaces on the left (so they're near your window list), the clock centered (glanceable), and system status grouped on the right (the conventional tray position). Each module block below just configures how that specific module displays.
+
+**Why laid out this way?** `modules-left/center/right` are the bar's three zones. Workspaces go on the left (near your window list), the clock sits center (glanceable at a distance), and system status — network, volume, battery, tray icons — groups on the right, matching the layout most desktop bars use.
+
 ---
-## 29. Connect to Wi-Fi with `nmtui`
+
+## 30. Connect to Wi-Fi Day-to-Day with `nmtui`
+
 ```bash
 nmtui
 ```
-This opens a text-based UI with arrow-key navigation:
-1. Select **Activate a connection**
-2. Pick your Wi-Fi network from the list
-3. Enter the password when prompted
+
+A simple text menu opens:
+
+1. Choose **Activate a connection**
+2. Arrow down to your Wi-Fi network, press `Enter`
+3. Type the password when asked
 4. It'll show as connected in the list
-**Why `nmtui` over `iwctl`?** `iwctl` (used during install) only manages the raw wireless link inside the live ISO. Once NetworkManager is installed and enabled, `nmtui` is the friendlier front-end for it — it also remembers networks and reconnects automatically on boot, which `iwctl` doesn't.
-To check connection status from the command line instead:
+
+**Why not `iwctl` again?** `iwctl` (from Step 1) only works inside the temporary live USB environment. Now that `networkmanager` is installed and running, `nmtui` is its friendly menu — and unlike `iwctl`, it remembers networks and reconnects automatically every time you boot.
+
+To just check your connection status without the menu:
+
 ```bash
 nmcli device status
 ```
+
 ---
-## 30. A Bit About Neovim
-Out of the box, `nvim` behaves like vanilla Vim with a saner default config. The essentials:
-| Mode | How to enter | What it's for |
+
+## 31. Neovim Basics
+
+`nvim` has a few different "modes" — this trips up a lot of first-timers coming from Notepad-style editors, so here's the short version:
+
+| Mode | How to enter it | What it's for |
 |---|---|---|
-| Normal | `Esc` | Navigation and commands (default mode) |
-| Insert | `i` | Typing text |
-| Visual | `v` | Selecting text |
-| Command | `:` | Running commands like save/quit |
-Core movements (Normal mode): `h j k l` = left/down/up/right, `w`/`b` = jump forward/back a word, `gg`/`G` = top/bottom of file.
-Common commands:
+| **Normal** | Press `Esc` | The default mode — moving around and running commands, *not* typing |
+| **Insert** | Press `i` | Actually typing text |
+| **Visual** | Press `v` | Selecting text |
+| **Command** | Press `:` | Typing commands like save or quit |
+
+Basic movement (while in Normal mode): `h` `j` `k` `l` move left/down/up/right, `w` jumps forward a word, `gg` jumps to the top of the file, `G` jumps to the bottom.
+
+The commands you'll use constantly:
+
 ```vim
-:w        " save
-:q        " quit
-:wq       " save and quit
-:q!       " quit without saving
-/text     " search forward for "text", n/N to jump next/prev match
+:w        " save the file
+:q        " quit (fails if you have unsaved changes)
+:wq       " save and quit together
+:q!       " quit and throw away unsaved changes
+/searchterm    " search forward for text, press n for next match
 ```
-Your config lives at `~/.config/nvim/init.lua`. 
-**Why learn it now?** Because neovim is a super powerful text editor with an infinite amount of tricks.
----
-## 31. Install LazyVim
-LazyVim is a preconfigured Neovim setup — sane defaults, LSP, autocomplete, and file tree out of the box, without hand-rolling a config from scratch.
 
-Install prerequisites, in dependency order:
-```bash
-sudo pacman -S base-devel git curl tree-sitter-cli
-```
-| Package | Purpose |
-|---|---|
-| base-devel | Compiler toolchain (gcc, make, etc.) — needed to build native plugin components |
-| git | Clone the LazyVim starter repo, and required by `lazy.nvim` (the plugin manager) to fetch plugins |
-| curl | Used by Mason.nvim to download LSPs, linters, and formatters |
-| tree-sitter-cli | Compiles Tree-sitter grammars for `nvim-treesitter`'s syntax highlighting |
+> 💡 **Tip:** If you ever get stuck and don't know what mode you're in, just press `Esc` a couple of times — that always gets you back to Normal mode safely.
 
-Back up any existing Neovim config first (you've been using vanilla `nvim` since step 7, so this matters):
-```bash
-mv ~/.config/nvim ~/.config/nvim.bak
-mv ~/.local/share/nvim ~/.local/share/nvim.bak
-mv ~/.local/state/nvim ~/.local/state/nvim.bak
-mv ~/.cache/nvim ~/.cache/nvim.bak
-```
-Clone the starter template:
-```bash
-git clone https://github.com/LazyVim/starter ~/.config/nvim
-rm -rf ~/.config/nvim/.git
-```
-Launch it:
-```bash
-nvim
-```
-**Why?** On first launch, `lazy.nvim` bootstraps itself and installs all the default LazyVim plugins automatically — just wait for it to finish, then restart `nvim`. You already have `ttf-jetbrains-mono-nerd` installed from step 18, so the icons in the file tree and status line will render correctly out of the box.
+Its own config lives at `~/.config/nvim/init.lua` — also Lua, so the skills carry over from `hyprland.lua`.
+
 ---
-## 32. A Bit About Yazi
-Yazi is a fast terminal file manager. Launch it:
+
+## 32. Yazi Basics
+
+Yazi is a terminal-based file manager — think of it as a fast, keyboard-driven alternative to a Files/Finder window.
+
 ```bash
 yazi
 ```
-Key bindings:
+
 | Key | Action |
 |---|---|
-| `h j k l` | Navigate (same as vim: left/down/up/right) |
-| `Enter` | Open file / enter directory |
-| `Space` | Select/toggle a file |
-| `y` then `p` | Copy then paste |
+| `h` `j` `k` `l` | Move left / down / up / right (same as nvim) |
+| `Enter` | Open a file, or step into a folder |
+| `Space` | Select/deselect a file |
+| `y` then `p` | Copy, then paste |
 | `d` | Cut (move) |
-| `a` | Create new file/folder |
+| `a` | Create a new file or folder |
 | `r` | Rename |
-| `Tab` | Toggle preview pane |
+| `Tab` | Toggle the preview pane |
 | `q` | Quit |
+
 ---
-## 33. Secret fzf Powers + Building Out `.zshrc`
-fzf isn't just `fzf` typed on its own — it hooks into your shell with keybindings once sourced:
-| Shortcut | What it does |
+
+## 33. fzf's Hidden Superpowers, and Building Out `.zshrc`
+
+Once fzf is sourced into your shell, it adds keyboard shortcuts that work anywhere on the command line:
+
+| Shortcut | What happens |
 |---|---|
-| `Ctrl+R` | Fuzzy-search your **command history** — type a few letters of a past command instead of scrolling |
-| `Ctrl+T` | Fuzzy-**find a file/directory** and insert its path at the cursor |
-| `Alt+C` | Fuzzy-`cd` into any subdirectory instantly |
-| `**<Tab>` | Type e.g. `vim **<Tab>` and fzf will fuzzy-complete the argument |
-Combine it with other tools for real power: `git checkout $(git branch | fzf)` fuzzy-picks a branch; `kill -9 $(ps aux | fzf | awk '{print $2}')` fuzzy-picks a process to kill.
-Now, here's the full `.zshrc` example, explained line by line:
+| `Ctrl+R` | Fuzzy-search your command **history** — type a couple of letters instead of pressing ↑ repeatedly |
+| `Ctrl+T` | Fuzzy-**find a file or folder** and drop its path at your cursor |
+| `Alt+C` | Fuzzy-`cd` straight into any subfolder |
+| `something **<Tab>` | Fuzzy-completes an argument — e.g. `nvim **<Tab>` |
+
+You can also chain it with other commands: `git checkout $(git branch | fzf)` lets you fuzzy-pick a branch to switch to.
+
+Here's the `.zshrc` block, explained line by line:
+
 ```bash
 eval "$(starship init zsh)"
 export EDITOR='nvim'
@@ -511,22 +773,22 @@ SAVEHIST=10000
 setopt SHARE_HISTORY
 setopt HIST_IGNORE_ALL_DUPS
 alias update='sudo pacman -Syu'
-alias search='nvim $(fzf)'
+alias search='nvim $(fzf --preview="bat --color=always {}")'
 ```
-| Line | What it does |
+
+| Line | Plain-English explanation |
 |---|---|
-| `eval "$(starship init zsh)"` | Runs Starship's init script and evaluates its output in your current shell — this is what actually replaces your plain zsh prompt with the Starship one. Should come near the top so later plugins don't fight over prompt-related hooks. |
-| `export EDITOR='nvim'` | Sets the default text editor used by other programs — `git commit`, `visudo`, `crontab -e`, etc. will all open in `nvim` instead of falling back to `vi`. |
-| `source <(fzf --zsh)` | Loads fzf's shell integration (the `Ctrl+R`, `Ctrl+T`, `Alt+C` keybindings and fuzzy completion) directly from fzf's own binary, so it stays in sync with whatever fzf version you have installed. |
-| `source .../zsh-syntax-highlighting.zsh` | Enables live red/green syntax highlighting as you type commands. |
-| `source .../zsh-autosuggestions.zsh` | Enables the greyed-out history-based autosuggestions. |
-| `HISTFILE=~/.zsh_history` | Tells zsh where to persist your command history on disk (otherwise it's only kept in memory for the session). |
-| `HISTSIZE=10000` | How many history entries zsh keeps loaded in memory at once. |
-| `SAVEHIST=10000` | How many history entries actually get written to `HISTFILE`. Usually matched to `HISTSIZE`. |
-| `setopt SHARE_HISTORY` | Makes every open terminal share the same live history — a command run in one tab shows up immediately when you press `↑` in another. |
-| `setopt HIST_IGNORE_ALL_DUPS` | Skips saving a command to history if it's identical to the one immediately before it (keeps history from filling up with repeated `ls`, `cd ..`, etc). |
-| `alias update='sudo pacman -Syu'` | Shortcut: type `update` instead of the full pacman sync/upgrade command. |
-| `alias search='nvim $(fzf)'` | Fuzzy-find a file with fzf, then open whatever you picked directly in nvim — one command instead of two. |
-**A tip on ordering**: the two plugin `source` lines should come *before* the `HISTFILE`/`setopt`/`alias` lines conceptually (though it won't break anything if they don't) — plugins react to keybindings and line-editor state, while history settings and aliases are just shell state, so keeping plugin setup grouped together near the top makes the file easier to scan later.
----
-And now you have a ready-to-use Arch Linux + Hyprland setup.
+| `eval "$(starship init zsh)"` | Turns on the Starship prompt you configured in Step 28. Keeping it near the top avoids conflicts with anything loaded after it. |
+| `export EDITOR='nvim'` | Tells other programs (like `git commit` or `sudo -e`) to open `nvim` instead of defaulting to `vi`. |
+| `source <(fzf --zsh)` | Loads fzf's keyboard shortcuts (`Ctrl+R`, `Ctrl+T`, `Alt+C`) straight from your installed fzf binary. |
+| `source .../zsh-syntax-highlighting.zsh` | Turns on the red/green live syntax highlighting from Step 27. |
+| `source .../zsh-autosuggestions.zsh` | Turns on the ghost-text history suggestions from Step 27. |
+| `HISTFILE=~/.zsh_history` | The file where your command history gets saved permanently, instead of vanishing when you close the terminal. |
+| `HISTSIZE=10000` | How many past commands zsh keeps in memory while you're using it. |
+| `SAVEHIST=10000` | How many of those get actually written to `HISTFILE` on disk. |
+| `setopt SHARE_HISTORY` | Every open terminal window shares one live history — run something in one tab, and pressing ↑ in another tab sees it instantly. |
+| `setopt HIST_IGNORE_ALL_DUPS` | Skips saving a command to history if it's an exact repeat of the one right before it. |
+| `alias update='sudo pacman -Syu'` | A shortcut — type `update` instead of the full pacman upgrade command. |
+| `alias search='nvim $(fzf --preview="bat --color=always {}")'` | Fuzzy-find a file with a preview, then open it directly in `nvim` — two steps in one word. |
+
+> 💡 **Tip:** Group your `source` lines together near the top of the file, and keep aliases/history settings below them — it makes the file much easier to scan later once it grows.
