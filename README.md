@@ -1,4 +1,4 @@
-# Arch Linux + Hyprland Installation Guide (for First-Timers)
+# Arch Linux + Hyprland Installation Guide
 
 This guide walks you from a blank drive to a fully working **Arch Linux + Hyprland** desktop — no prior Arch experience needed.
 
