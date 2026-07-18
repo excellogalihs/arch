@@ -643,44 +643,38 @@ nvim ~/.config/waybar/config.jsonc
 ```jsonc
 {
     "layer": "top",
-    "position": "top",
-    "height": 32,
-    "spacing": 4,
-
-    "modules-left": ["hyprland/workspaces"],
+    "modules-left": ["hyprland/workspaces", "custom/media-animation", "custom/media-playing"],
     "modules-center": ["clock"],
-    "modules-right": ["network", "pulseaudio", "battery", "tray"],
-
-    "hyprland/workspaces": {
-        "format": "{icon}",
-        "on-click": "activate"
-    },
-
-    "clock": {
-        "format": "{:%H:%M   %a %d %b}"
-    },
-
-    "network": {
-        "format-wifi": "  {essid}",
-        "format-ethernet": "  Connected",
-        "format-disconnected": "⚠ Offline"
-    },
-
-    "pulseaudio": {
-        "format": "{icon}  {volume}%",
-        "format-icons": ["", "", ""],
-        "on-click": "pavucontrol"
-    },
-
+    "modules-right": ["pulseaudio", "network", "cpu", "memory"],
     "battery": {
-        "format": "{icon}  {capacity}%",
-        "format-icons": ["", "", "", "", ""]
+        "format": "{capacity}% {icon}",
+        "format-icons": ["", "", "", "", ""]
     },
-
-    "tray": {
-        "spacing": 8
-    }
-}
+    "clock": {
+        "format": "󰥔 {:%a, %d. %b  %H:%M}"
+    },
+    "cpu": {
+        "format": " {}%"
+    },
+    "hyprland/workspaces": {
+        "persistent-workspaces": {
+            "*": [1, 2, 3, 4, 5]
+        }
+    },
+    "memory": {
+        "format": " {}%"
+    },
+    "network": {
+        "format": "  {essid}",
+        "tooltip": false,
+    },
+    "pulseaudio": {
+        "format": "{icon} {volume}%",
+        "format-icons": {
+            "default": ["", " ", " "]
+        },
+        "scroll-step": 2
+    },
 ```
 
 Then the styling:
