@@ -736,6 +736,18 @@ A simple text menu opens:
 
 **Why not `iwctl` again?** `iwctl` (from Step 1) only works inside the temporary live USB environment. Now that `networkmanager` is installed and running, `nmtui` is its friendly menu — and unlike `iwctl`, it remembers networks and reconnects automatically every time you boot.
 
+### Add `nm-applet` to autostart
+
+You already installed `network-manager-applet` back in Step 18, but it won't run on its own — it needs to be launched when Hyprland starts, just like `hyprpaper` and `waybar`. Add this line to `hyprland.lua`:
+
+```lua
+hl.exec_cmd("nm-applet")
+```
+
+**Why?** `nm-applet` is the little Wi-Fi icon that sits in your tray (next to the volume/battery icons) once `waybar`'s tray module picks it up. Without this line, NetworkManager itself still auto-connects to known networks fine on boot — but you'd have no visual indicator or quick-click menu to switch networks, check signal strength, or forget a network without dropping back into `nmtui` every time.
+
+> 💡 **Tip:** If you don't see the tray icon appear after adding this, double check `"tray"` is included somewhere in your `modules-right` list in `~/.config/waybar/config.jsonc` (from Step 29) — the applet runs invisibly without a tray to dock into.
+
 To just check your connection status without the menu:
 
 ```bash
