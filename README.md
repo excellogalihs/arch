@@ -27,6 +27,7 @@ This guide walks you from a blank drive to a fully working **Arch Linux + Hyprla
 | **Chroot** | "Change root" — jumping from the temporary live USB environment *into* the system you're installing, as if you'd already booted into it |
 | **Bootloader** | The program that runs first when you power on, and hands control to the Linux kernel (we're using GRUB) |
 | **Compositor** | The program that draws windows on screen and manages your desktop (Hyprland, in our case) |
+| **AUR** | The Arch User Repository — a community-run collection of build scripts for software that isn't in the official Arch repos |
 
 Everything below assumes you've already booted from the Arch ISO and you're staring at a terminal prompt that looks like `root@archiso ~ #`.
 
@@ -423,7 +424,67 @@ Delete that entire line. It's the only thing causing the yellow "unmodified conf
 
 ---
 
-## 23. Set a Wallpaper with Hyprpaper
+## 23. Install an AUR Helper (yay)
+
+Everything you've installed so far came from the **official Arch repositories** via `pacman`. But a huge amount of Linux software — browsers with extra patches, proprietary apps, niche CLI tools, in-development packages — lives instead in the **AUR (Arch User Repository)**: a community-maintained collection of build recipes (`PKGBUILD` files), not pre-built binaries. `pacman` doesn't know how to touch the AUR at all — you need a separate tool called an **AUR helper** to download, build, and install from it as easily as you use `pacman`.
+
+First, install the tools needed to actually *build* software from source:
+
+```bash
+sudo pacman -S --needed base-devel git
+```
+
+Then clone and build `yay` itself (yay is an AUR package too, so it's installed "by hand" this one time):
+
+```bash
+git clone https://aur.archlinux.org/yay.git
+cd yay
+makepkg -si
+cd ..
+rm -rf yay
+```
+
+| Package/Command | Purpose |
+|---|---|
+| `base-devel` | A package group bundling `gcc`, `make`, `patch`, and other tools needed to compile source code |
+| `git` | Needed to download (`clone`) both `yay`'s source and, later, any AUR package's source |
+| `makepkg -si` | Builds the package from its `PKGBUILD` (`-s` also grabs and installs any missing dependencies first) and `-i` installs the resulting package once it's built |
+
+Once installed, using `yay` feels just like `pacman`, except it searches both the official repos *and* the AUR:
+
+```bash
+yay -S somepackage     # install a package (official or AUR)
+yay -Syu                # update everything, official repos + AUR, in one go
+yay -Ss keyword          # search by name/description
+```
+
+> ⚠️ **Warning:** AUR packages are user-submitted build scripts, not vetted by Arch the way official packages are. `makepkg`/`yay` will always show you the `PKGBUILD` before building — actually skim it, especially for less popular packages, since it's just a script that runs with your permissions.
+
+### `yay` vs `paru` — which one should you use?
+
+Both are AUR helpers that do the same core job (search, download, build, install, and keep AUR + official packages updated together), and both were originally written by the same author, so day-to-day usage feels nearly identical. The differences are mostly under the hood:
+
+| | `yay` | `paru` |
+|---|---|---|
+| **Written in** | Go | Rust |
+| **Age / ecosystem** | Older, the long-time default in most Arch guides and tutorials | Newer "spiritual successor," written after the author moved on from `yay` |
+| **PKGBUILD review** | Shows diffs on update; review step is easy to skim past | Defaults to a more insistent interactive review before building, which some find safer, others find naggy |
+| **Config style** | Command-line flags, a `~/.config/yay/config.json` | Similar flags, plus a `~/.config/paru/paru.conf` with a few extra knobs (e.g. batch installs, dedicated cleanup commands) |
+| **Maintenance** | Stable, feature-complete, in wide use | Actively developed, tends to pick up newer conveniences first |
+
+**Why does this matter?** Neither is objectively "better" — they solve the exact same problem and can even be swapped later without side effects, since both just wrap `makepkg`. This guide uses `yay` because it's what most beginner tutorials and community dotfiles reference, so troubleshooting help is easier to find. If you'd rather use `paru` instead, the install steps are identical, just swap the repository URL:
+
+```bash
+git clone https://aur.archlinux.org/paru.git
+cd paru
+makepkg -si
+cd ..
+rm -rf paru
+```
+
+---
+
+## 24. Set a Wallpaper with Hyprpaper
 
 Hyprpaper's config lives at `~/.config/hypr/hyprpaper.conf`.
 
@@ -477,11 +538,11 @@ hyprctl hyprpaper reload
 
 ---
 
-## 24. Turn On `hyprpolkitagent`
+## 25. Turn On `hyprpolkitagent`
 
 This one has no config file — it just needs to be *running*. It's what lets password prompts actually appear when a graphical app asks for admin permission (installing something with a GUI, mounting a drive, etc).
 
-Add this to `hyprland.lua`, alongside the hyprpaper line from Step 23:
+Add this to `hyprland.lua`, alongside the hyprpaper line from Step 24:
 
 ```lua
 hl.exec_cmd("hyprpolkitagent")
@@ -497,7 +558,7 @@ If that prints a line with a process ID, it's working.
 
 ---
 
-## 25. Pick a Kitty Theme
+## 26. Pick a Kitty Theme
 
 Kitty (your terminal) has a built-in theme browser — no config file editing required:
 
@@ -521,7 +582,7 @@ After selecting a font, you can restart kitty.
 
 ---
 
-## 26. Add Both Zsh Plugins
+## 27. Add Both Zsh Plugins
 
 Open your zsh config:
 
@@ -544,7 +605,7 @@ source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zs
 
 ---
 
-## 27. Choose a Starship Prompt Preset
+## 28. Choose a Starship Prompt Preset
 
 Starship comes with several ready-made prompt styles so you don't have to design one from scratch.
 
@@ -570,7 +631,7 @@ eval "$(starship init zsh)"
 
 ---
 
-## 28. A Minimal Waybar Setup That Actually Works
+## 29. A Minimal Waybar Setup That Actually Works
 
 Waybar reads two files: `~/.config/waybar/config.jsonc` (what to show) and `~/.config/waybar/style.css` (how it looks).
 
@@ -666,7 +727,7 @@ hl.exec_cmd("waybar")
 
 ---
 
-## 29. Connect to Wi-Fi Day-to-Day with `nmtui`
+## 30. Connect to Wi-Fi Day-to-Day with `nmtui`
 
 ```bash
 nmtui
@@ -689,7 +750,7 @@ nmcli device status
 
 ---
 
-## 30. Neovim Basics
+## 31. Neovim Basics
 
 `nvim` has a few different "modes" — this trips up a lot of first-timers coming from Notepad-style editors, so here's the short version:
 
@@ -718,7 +779,7 @@ Its own config lives at `~/.config/nvim/init.lua` — also Lua, so the skills ca
 
 ---
 
-## 31. Yazi Basics
+## 32. Yazi Basics
 
 Yazi is a terminal-based file manager — think of it as a fast, keyboard-driven alternative to a Files/Finder window.
 
@@ -740,7 +801,7 @@ yazi
 
 ---
 
-## 32. fzf's Hidden Superpowers, and Building Out `.zshrc`
+## 33. fzf's Hidden Superpowers, and Building Out `.zshrc`
 
 Once fzf is sourced into your shell, it adds keyboard shortcuts that work anywhere on the command line:
 
@@ -786,3 +847,5 @@ alias search='nvim $(fzf --preview="bat --color=always {}")'
 | `alias search='nvim $(fzf --preview="bat --color=always {}")'` | Fuzzy-find a file with a preview, then open it directly in `nvim` — two steps in one word. |
 
 > 💡 **Tip:** Group your `source` lines together near the top of the file, and keep aliases/history settings below them — it makes the file much easier to scan later once it grows.
+
+> 💡 **Tip:** Now that `yay` (Step 23) is set up, you can add `alias yayu='yay -Syu'` here too — a single command that updates official packages and AUR packages together.
