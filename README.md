@@ -294,7 +294,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 ## 18. Install Hyprland and Desktop Essentials
 
 ```bash
-pacman -S hyprland hyprpaper hyprpolkitagent sddm pipewire pipewire-pulse wireplumber kitty zsh zsh-autosuggestions zsh-syntax-highlighting starship waybar network-manager-applet ttf-jetbrains-mono-nerd nvim yazi fzf bat fastfetch
+pacman -S hyprland hyprpaper hyprpolkitagent sddm pipewire pipewire-pulse wireplumber kitty zsh zsh-autosuggestions zsh-syntax-highlighting starship waybar network-manager-applet ttf-jetbrains-mono-nerd nvim yazi fzf bat fastfetch swaync wofi
 ```
 
 Grouped by what each thing does:
@@ -332,6 +332,12 @@ Grouped by what each thing does:
 |---|---|
 | `waybar` | The status bar along the top/bottom of your screen |
 | `network-manager-applet` | A Wi-Fi icon/menu in your tray |
+
+**Notifications & launcher**
+| Package | Purpose |
+|---|---|
+| `swaync` | Notification daemon and notification center — pops up notifications and gives you a panel to review/clear them |
+| `wofi` | An application launcher and general-purpose menu (for launching apps, and for menus other tools can pipe into) |
 
 **Fonts**
 | Package | Purpose |
@@ -524,7 +530,7 @@ wallpaper {
 }
 ```
 
-To make hyprpaper start automatically every login, add this line to `hyprland.lua` (from Step 22):
+To make hyprpaper start automatically every login, add this line to `hyprland.lua`:
 
 ```lua
 hl.exec_cmd("hyprpaper")
@@ -558,7 +564,40 @@ If that prints a line with a process ID, it's working.
 
 ---
 
-## 26. Pick a Kitty Theme
+## 26. Turn On `swaync` (Notifications)
+
+`swaync` ("sway notification center") is what actually shows notification pop-ups on screen and gives you a panel to review or clear them — without it, apps can *try* to send notifications, but nothing will ever appear.
+
+Like `hyprpolkitagent`, it has no config file you're required to touch — it just needs to be running. Add this line to `hyprland.lua`, alongside your other `hl.exec_cmd(...)` lines:
+
+```lua
+hl.exec_cmd("swaync")
+```
+
+Check it's running:
+
+```bash
+pgrep -a swaync
+```
+
+If that prints a line with a process ID, it's working — try triggering a test notification:
+
+```bash
+notify-send "Hello" "This is a test notification"
+```
+
+> 💡 **Tip:** If you want to customize how notifications and the panel look (colors, size, position), `swaync` reads from `~/.config/swaync/style.css` and `~/.config/swaync/config.json` — copy the defaults first so you have something to start from:
+> ```bash
+> mkdir -p ~/.config/swaync
+> cp /etc/xdg/swaync/config.json ~/.config/swaync/config.json
+> cp /etc/xdg/swaync/style.css ~/.config/swaync/style.css
+> ```
+
+**Why here, before waybar?** Step 30 (waybar) adds a bell-icon module that clicks through to `swaync` — that module is just a thin wrapper around `swaync-client` and does nothing until `swaync` itself is actually running. Getting it turned on now means it's ready by the time you wire it into the bar.
+
+---
+
+## 27. Pick a Kitty Theme
 
 Kitty (your terminal) has a built-in theme browser — no config file editing required:
 
@@ -582,7 +621,7 @@ After selecting a font, you can restart kitty.
 
 ---
 
-## 27. Add Both Zsh Plugins
+## 28. Add Both Zsh Plugins
 
 Open your zsh config:
 
@@ -605,7 +644,7 @@ source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zs
 
 ---
 
-## 28. Choose a Starship Prompt Preset
+## 29. Choose a Starship Prompt Preset
 
 Starship comes with several ready-made prompt styles so you don't have to design one from scratch.
 
@@ -621,7 +660,7 @@ Save one as your active config — for example, the Nerd Font icons preset:
 starship preset nerd-font-symbols -o ~/.config/starship.toml
 ```
 
-Then make sure Starship is actually turned on (this line is also covered in Step 33's full `.zshrc` walkthrough):
+Then make sure Starship is actually turned on (this line is also covered in Step 35's full `.zshrc` walkthrough):
 
 ```bash
 eval "$(starship init zsh)"
@@ -631,7 +670,7 @@ eval "$(starship init zsh)"
 
 ---
 
-## 29. A Minimal Waybar Setup That Actually Works
+## 30. A Minimal Waybar Setup That Actually Works
 
 Waybar reads two files: `~/.config/waybar/config.jsonc` (what to show) and `~/.config/waybar/style.css` (how it looks).
 
@@ -645,16 +684,16 @@ nvim ~/.config/waybar/config.jsonc
     "layer": "top",
     "modules-left": ["hyprland/workspaces", "custom/media-animation", "custom/media-playing"],
     "modules-center": ["clock"],
-    "modules-right": ["pulseaudio", "network", "cpu", "memory"],
+    "modules-right": ["custom/notification", "pulseaudio", "network", "cpu", "memory"],
     "battery": {
         "format": "{capacity}% {icon}",
-        "format-icons": ["", "", "", "", ""]
+        "format-icons": ["", "", "", "", ""]
     },
     "clock": {
         "format": "󰥔 {:%a, %d. %b  %H:%M}"
     },
     "cpu": {
-        "format": " {}%"
+        "format": " {}%"
     },
     "hyprland/workspaces": {
         "persistent-workspaces": {
@@ -662,16 +701,32 @@ nvim ~/.config/waybar/config.jsonc
         }
     },
     "memory": {
-        "format": " {}%"
+        "format": " {}%"
     },
     "network": {
-        "format": "  {essid}",
+        "format": "  {essid}",
         "tooltip": false,
+    },
+    "custom/notification": {
+        "tooltip": false,
+        "format": "{icon}",
+        "format-icons": {
+            "notification": "<span foreground='red'><sup></sup></span>",
+            "none": "",
+            "dnd-notification": "<span foreground='red'><sup></sup></span>",
+            "dnd-none": ""
+        },
+        "return-type": "json",
+        "exec-if": "which swaync-client",
+        "exec": "swaync-client -swb",
+        "on-click": "swaync-client -t -sw",
+        "on-click-right": "swaync-client -d -sw",
+        "escape": true
     },
     "pulseaudio": {
         "format": "{icon} {volume}%",
         "format-icons": {
-            "default": ["", " ", " "]
+            "default": ["", " ", " "]
         },
         "scroll-step": 2
     },
@@ -706,7 +761,7 @@ window#waybar {
     border-radius: 6px;
 }
 
-#clock, #network, #pulseaudio, #battery, #tray {
+#clock, #network, #pulseaudio, #battery, #tray, #custom-notification {
     padding: 0 10px;
 }
 ```
@@ -717,11 +772,116 @@ Make it launch automatically by adding this to `hyprland.lua`:
 hl.exec_cmd("waybar")
 ```
 
-**Why laid out this way?** `modules-left/center/right` are the bar's three zones. Workspaces go on the left (near your window list), the clock sits center (glanceable at a distance), and system status — network, volume, battery, tray icons — groups on the right, matching the layout most desktop bars use.
+**Why laid out this way?** `modules-left/center/right` are the bar's three zones. Workspaces go on the left (near your window list), the clock sits center (glanceable at a distance), and system status — notifications, network, volume, battery, tray icons — groups on the right, matching the layout most desktop bars use. The `custom/notification` module is just a clickable bell icon that talks to `swaync` (already turned on in Step 26) via `swaync-client` — waybar itself has no idea what a notification even is, it's only forwarding clicks.
 
 ---
 
-## 30. Connect to Wi-Fi Day-to-Day with `nmtui`
+## 31. Style Wofi (App Launcher)
+
+`wofi` is your app launcher — press a keybind, start typing an app's name, hit `Enter` to open it. Out of the box it works but looks like a plain grey box; this step gives it the same dark/accent look as your waybar.
+
+First, make sure it's actually bound to a key. Open `hyprland.lua` and add a keybind (adjust to match however your other binds are written — this assumes `SUPER` as your main modifier):
+
+```lua
+hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("wofi --show drun"))
+```
+
+`--show drun` tells wofi to act specifically as an application launcher (reading `.desktop` files), rather than one of its other modes (like a run-command prompt or window switcher).
+
+Now style it. Wofi reads from two files, same pattern as waybar:
+
+```bash
+mkdir ~/.config/wofi
+nvim ~/.config/wofi/config
+```
+
+```ini
+width=600
+height=400
+location=center
+show=drun
+prompt=Search...
+filter_rate=100
+allow_markup=true
+no_actions=true
+halign=fill
+orientation=vertical
+content_halign=fill
+insensitive=true
+allow_images=true
+image_size=32
+gtk_dark=true
+```
+
+Then the CSS:
+
+```bash
+nvim ~/.config/wofi/style.css
+```
+
+```css
+window {
+    font-family: "JetBrainsMono Nerd Font";
+    font-size: 14px;
+    background-color: rgba(20, 20, 30, 0.95);
+    border-radius: 12px;
+    border: 2px solid #89b4fa;
+}
+
+#input {
+    margin: 10px;
+    padding: 8px;
+    border-radius: 8px;
+    background-color: #1e1e2e;
+    color: #cdd6f4;
+    border: none;
+}
+
+#inner-box {
+    margin: 5px;
+    padding: 5px;
+    background-color: transparent;
+}
+
+#outer-box {
+    margin: 5px;
+    padding: 10px;
+    background-color: transparent;
+}
+
+#entry {
+    padding: 8px;
+    border-radius: 8px;
+}
+
+#entry:selected {
+    background-color: #89b4fa;
+}
+
+#entry:selected #text {
+    color: #1e1e2e;
+}
+
+#text {
+    color: #cdd6f4;
+}
+```
+
+| Setting | What it does |
+|---|---|
+| `width` / `height` | The size of the launcher box in pixels |
+| `location=center` | Pops up centered on screen instead of a corner |
+| `show=drun` | Makes app-launcher mode the default if you ever run bare `wofi` without `--show drun` |
+| `gtk_dark=true` | Asks GTK to render its bits (like scrollbars) in dark mode too, so nothing looks out of place |
+| `allow_images=true` / `image_size` | Shows each app's icon next to its name, sized to fit |
+
+**Why match the waybar colors?** `#89b4fa` (the blue accent) and `#1e1e2e`/`#cdd6f4` (background/text) are the same values used in Step 30's `waybar/style.css` — reusing them here just keeps the bar, launcher, and (if you style it later) swaync panel feeling like one consistent theme instead of three unrelated GTK apps bolted together.
+
+After saving, reopen wofi with your new keybind (`SUPER+D`) to see the changes — no reload command needed, it re-reads its config fresh every time it launches.
+
+---
+
+## 32. Connect to Wi-Fi Day-to-Day with `nmtui`
 
 ```bash
 nmtui
@@ -746,7 +906,7 @@ hl.exec_cmd("nm-applet")
 
 **Why?** `nm-applet` is the little Wi-Fi icon that sits in your tray (next to the volume/battery icons) once `waybar`'s tray module picks it up. Without this line, NetworkManager itself still auto-connects to known networks fine on boot — but you'd have no visual indicator or quick-click menu to switch networks, check signal strength, or forget a network without dropping back into `nmtui` every time.
 
-> 💡 **Tip:** If you don't see the tray icon appear after adding this, double check `"tray"` is included somewhere in your `modules-right` list in `~/.config/waybar/config.jsonc` (from Step 29) — the applet runs invisibly without a tray to dock into.
+> 💡 **Tip:** If you don't see the tray icon appear after adding this, double check `"tray"` is included somewhere in your `modules-right` list in `~/.config/waybar/config.jsonc` (from Step 30) — the applet runs invisibly without a tray to dock into.
 
 To just check your connection status without the menu:
 
@@ -756,7 +916,7 @@ nmcli device status
 
 ---
 
-## 31. Neovim Basics
+## 33. Neovim Basics
 
 `nvim` has a few different "modes" — this trips up a lot of first-timers coming from Notepad-style editors, so here's the short version:
 
@@ -785,7 +945,7 @@ Its own config lives at `~/.config/nvim/init.lua` — also Lua, so the skills ca
 
 ---
 
-## 32. Yazi Basics
+## 34. Yazi Basics
 
 Yazi is a terminal-based file manager — think of it as a fast, keyboard-driven alternative to a Files/Finder window.
 
@@ -807,7 +967,7 @@ yazi
 
 ---
 
-## 33. fzf's Hidden Superpowers, and Building Out `.zshrc`
+## 35. fzf's Hidden Superpowers, and Building Out `.zshrc`
 
 Once fzf is sourced into your shell, it adds keyboard shortcuts that work anywhere on the command line:
 
@@ -839,11 +999,11 @@ alias search='nvim $(fzf --preview="bat --color=always {}")'
 
 | Line | Plain-English explanation |
 |---|---|
-| `eval "$(starship init zsh)"` | Turns on the Starship prompt you configured in Step 28. Keeping it near the top avoids conflicts with anything loaded after it. |
+| `eval "$(starship init zsh)"` | Turns on the Starship prompt you configured in Step 29. Keeping it near the top avoids conflicts with anything loaded after it. |
 | `export EDITOR='nvim'` | Tells other programs (like `git commit` or `sudo -e`) to open `nvim` instead of defaulting to `vi`. |
 | `source <(fzf --zsh)` | Loads fzf's keyboard shortcuts (`Ctrl+R`, `Ctrl+T`, `Alt+C`) straight from your installed fzf binary. |
-| `source .../zsh-syntax-highlighting.zsh` | Turns on the red/green live syntax highlighting from Step 27. |
-| `source .../zsh-autosuggestions.zsh` | Turns on the ghost-text history suggestions from Step 27. |
+| `source .../zsh-syntax-highlighting.zsh` | Turns on the red/green live syntax highlighting from Step 28. |
+| `source .../zsh-autosuggestions.zsh` | Turns on the ghost-text history suggestions from Step 28. |
 | `HISTFILE=~/.zsh_history` | The file where your command history gets saved permanently, instead of vanishing when you close the terminal. |
 | `HISTSIZE=10000` | How many past commands zsh keeps in memory while you're using it. |
 | `SAVEHIST=10000` | How many of those get actually written to `HISTFILE` on disk. |
