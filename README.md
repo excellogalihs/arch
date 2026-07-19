@@ -146,7 +146,7 @@ pacstrap /mnt base linux linux-firmware
 ## 7. Install Essential Packages
 
 ```bash
-pacstrap /mnt networkmanager grub efibootmgr sudo nvim
+pacstrap /mnt networkmanager grub efibootmgr sudo nvim zsh
 ```
 
 | Package | Purpose |
@@ -156,6 +156,7 @@ pacstrap /mnt networkmanager grub efibootmgr sudo nvim
 | `efibootmgr` | Registers GRUB with your motherboard's UEFI firmware |
 | `sudo` | Lets your regular user run administrator-level commands when needed |
 | `nvim` | A text editor for editing config files (you'll use this constantly) |
+| `zsh` | The shell itself, installed now so it's already on disk by the time you create your user account and set it as their login shell in Step 15 |
 
 **Why?** The base system from Step 6 is deliberately minimal — it can't even connect to Wi-Fi or boot on its own yet. These packages fill in those gaps.
 
@@ -262,7 +263,7 @@ passwd excello
 
 Replace `excello` with whatever username you want.
 
-**Why?** You shouldn't do your daily computing as `root` — one typo could wreck your whole system. `-m` creates a home folder for this user, `-G wheel` puts them in the `wheel` group (needed for admin permissions, next step), and `-s /bin/zsh` sets zsh as their shell from the start.
+**Why?** You shouldn't do your daily computing as `root` — one typo could wreck your whole system. `-m` creates a home folder for this user, `-G wheel` puts them in the `wheel` group (needed for admin permissions, next step), and `-s /bin/zsh` sets zsh as their shell right away, since Step 7 already installed it.
 
 ---
 
@@ -294,7 +295,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 ## 18. Install Hyprland and Desktop Essentials
 
 ```bash
-pacman -S hyprland hyprpaper hyprpolkitagent xdg-desktop-portal-hyprland sddm pipewire pipewire-pulse wireplumber kitty zsh zsh-autosuggestions zsh-syntax-highlighting starship waybar network-manager-applet ttf-jetbrains-mono-nerd nvim yazi fzf bat fastfetch swaync wofi grim wl-clipboard
+pacman -S hyprland hyprpaper hyprpolkitagent xdg-desktop-portal-hyprland sddm pipewire pipewire-pulse wireplumber kitty zsh-autosuggestions zsh-syntax-highlighting starship waybar network-manager-applet ttf-jetbrains-mono-nerd nvim yazi fzf bat fastfetch swaync wofi grim wl-clipboard
 ```
 
 Grouped by what each thing does:
@@ -323,7 +324,6 @@ Grouped by what each thing does:
 | Package | Purpose |
 |---|---|
 | `kitty` | A fast, GPU-accelerated terminal emulator |
-| `zsh` | An alternative shell to `bash`, with more features |
 | `zsh-autosuggestions` | Ghost-text command suggestions as you type |
 | `zsh-syntax-highlighting` | Colors commands as valid/invalid while typing |
 | `starship` | A customizable, informative shell prompt |
@@ -438,7 +438,7 @@ Its own config lives at `~/.config/nvim/init.lua`. You'll be using `nvim` for ne
 
 ---
 
-## 23. Clean Up `hyprland.lua`
+## 23. Get to Know `hyprland.lua`
 
 Hyprland's config file lives at `~/.config/hypr/hyprland.lua` and is written in **Lua** (a small, readable scripting language), not a special Hyprland-only format.
 
@@ -543,7 +543,6 @@ Find the **AUTOSTART** section — look for the comment header `---- AUTOSTART -
 ```lua
 hl.on("hyprland.start", function()
 	hl.exec_cmd("systemctl --user start hyprpolkitagent")
-	hl.exec_cmd("waybar & hyprpaper & nm-applet & swaync")
 end)
 ```
 
@@ -563,7 +562,7 @@ If that prints a line with a process ID, it's working.
 
 `swaync` ("sway notification center") is what actually shows notification pop-ups on screen and gives you a panel to review or clear them — without it, apps can *try* to send notifications, but nothing will ever appear.
 
-Like `hyprpolkitagent`, it has no config file you're required to touch — it just needs to be running. Go back to the same **AUTOSTART** block from Step 25 and add `swaync` into the second `hl.exec_cmd(...)` line, chaining it with `&`:
+Like `hyprpolkitagent`, it has no config file you're required to touch — it just needs to be running. Go back to the same **AUTOSTART** block from Step 25 and add a second `hl.exec_cmd(...)` line for `swaync`:
 
 ```lua
 hl.on("hyprland.start", function()
@@ -572,7 +571,7 @@ hl.on("hyprland.start", function()
 end)
 ```
 
-(You'll keep adding to that second line as you go — `hyprpaper`, `waybar`, and `nm-applet` all join it in the next few steps, the same way the `&` chains them into one shell command that fires everything off together.)
+You'll keep adding to that second line as you go — `hyprpaper`, `waybar`, and `nm-applet` all join it in the next few steps, the same way `&` chains them into one shell command that fires everything off together.
 
 Check it's running:
 
@@ -593,7 +592,7 @@ notify-send "Hello" "This is a test notification"
 > cp /etc/xdg/swaync/style.css ~/.config/swaync/style.css
 > ```
 
-**Why here, before waybar?** Step 28 (waybar) adds a bell-icon module that clicks through to `swaync` — that module is just a thin wrapper around `swaync-client` and does nothing until `swaync` itself is actually running. Getting it turned on now means it's ready by the time you wire it into the bar.
+**Why turn this on before waybar?** Step 28 (waybar) adds a bell-icon module that clicks through to `swaync` — that module is just a thin wrapper around `swaync-client` and does nothing until `swaync` itself is actually running. Getting it turned on now means it's ready by the time you wire it into the bar.
 
 ---
 
@@ -666,9 +665,9 @@ nvim ~/.config/waybar/config.jsonc
 ```jsonc
 {
     "layer": "top",
-    "modules-left": ["hyprland/workspaces", "custom/media-animation", "custom/media-playing"],
+    "modules-left": ["hyprland/workspaces"],
     "modules-center": ["clock"],
-    "modules-right": ["custom/notification", "pulseaudio", "network", "cpu", "memory"],
+    "modules-right": ["custom/notification", "pulseaudio", "network", "cpu", "memory", "tray"],
     "battery": {
         "format": "{capacity}% {icon}",
         "format-icons": ["", "", "", "", ""]
@@ -689,7 +688,7 @@ nvim ~/.config/waybar/config.jsonc
     },
     "network": {
         "format": "  {essid}",
-        "tooltip": false,
+        "tooltip": false
     },
     "custom/notification": {
         "tooltip": false,
@@ -713,7 +712,8 @@ nvim ~/.config/waybar/config.jsonc
             "default": ["", " ", " "]
         },
         "scroll-step": 2
-    },
+    }
+}
 ```
 
 Then the styling:
@@ -759,7 +759,7 @@ hl.on("hyprland.start", function()
 end)
 ```
 
-**Why laid out this way?** `modules-left/center/right` are the bar's three zones. Workspaces go on the left (near your window list), the clock sits center (glanceable at a distance), and system status — notifications, network, volume, battery, tray icons — groups on the right, matching the layout most desktop bars use. The `custom/notification` module is just a clickable bell icon that talks to `swaync` (already turned on in Step 26) via `swaync-client` — waybar itself has no idea what a notification even is, it's only forwarding clicks.
+**Why laid out this way?** `modules-left/center/right` are the bar's three zones. Workspaces go on the left (near your window list), the clock sits center (glanceable at a distance), and system status — notifications, network, volume, battery, tray icons — groups on the right, matching the layout most desktop bars use. The `custom/notification` module is just a clickable bell icon that talks to `swaync` (already turned on in Step 26) via `swaync-client` — waybar itself has no idea what a notification even is, it's only forwarding clicks. The `tray` module is included in `modules-right` because Step 33 hooks the Wi-Fi tray icon into it.
 
 ---
 
@@ -780,7 +780,7 @@ If it's missing, add it into that same list, below `local mainMod = "SUPER"`.
 Now style it. Wofi reads from two files, same pattern as waybar:
 
 ```bash
-mkdir ~/.config/wofi
+mkdir -p ~/.config/wofi
 nvim ~/.config/wofi/config
 ```
 
@@ -901,7 +901,7 @@ If you don't see it, add it below `local mainMod = "SUPER"` alongside your other
 
 ---
 
-## 31. Pick a Kitty Theme
+## 31. Pick a Kitty Theme and Font
 
 Kitty (your terminal) has a built-in theme browser — no config file editing required:
 
@@ -915,13 +915,15 @@ Use the arrow keys or type to search, preview a theme live, and press `Enter` to
 
 After picking one, either restart kitty or reload it live with `Ctrl+Shift+F5`.
 
+Pick a font the same way:
+
 ```bash
 kitten choose-fonts
 ```
 
-**Why?** It makes the terminal more comfortable and futuristic.
+**Why?** A Nerd Font (like the `ttf-jetbrains-mono-nerd` you already installed) makes the terminal render icons correctly and just feels a lot more comfortable to look at all day.
 
-After selecting a font, you can restart kitty.
+After selecting a font, restart kitty to see it applied.
 
 ---
 
@@ -975,7 +977,7 @@ end)
 
 **Why?** `nm-applet` is the little Wi-Fi icon that sits in your tray (next to the volume/battery icons) once `waybar`'s tray module picks it up. Without this line, NetworkManager itself still auto-connects to known networks fine on boot — but you'd have no visual indicator or quick-click menu to switch networks, check signal strength, or forget a network without dropping back into `nmtui` every time.
 
-> 💡 **Tip:** If you don't see the tray icon appear after adding this, double check `"tray"` is included somewhere in your `modules-right` list in `~/.config/waybar/config.jsonc` (from Step 28) — the applet runs invisibly without a tray to dock into.
+> 💡 **Tip:** If you don't see the tray icon appear after adding this, double check `"tray"` is included in your `modules-right` list in `~/.config/waybar/config.jsonc` (already added in Step 28) — the applet runs invisibly without a tray to dock into.
 
 To just check your connection status without the menu:
 
@@ -985,34 +987,15 @@ nmcli device status
 
 ---
 
-## 34. Add Both Zsh Plugins
+## 34. Finish Your Shell: Plugins, Prompt, and `.zshrc`
 
-Open your zsh config:
+This last step brings together everything your shell needs: the two zsh plugins from Step 18, a Starship prompt, and fzf's keyboard shortcuts. Rather than editing `.zshrc` piece by piece, you'll write it once, in full.
 
-```bash
-nvim ~/.zshrc
-```
-
-Add these two lines:
-
-```bash
-source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
-source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-```
-
-> ⚠️ **Order matters:** keep `zsh-syntax-highlighting` sourced *last* among your plugins — it hooks deeply into how zsh handles what you type, and other plugins loaded after it can quietly break the highlighting.
-
-**What each one actually does:**
+**What each plugin actually does:**
 - **zsh-autosuggestions** — as you type, it shows a faint, greyed-out guess of the rest of the command based on your history. Press the `→` right-arrow key to accept it.
 - **zsh-syntax-highlighting** — colors what you're typing green if it's a valid, runnable command, and red if it isn't — so you catch typos before hitting Enter.
 
----
-
-## 35. Choose a Starship Prompt Preset
-
-Starship comes with several ready-made prompt styles so you don't have to design one from scratch.
-
-See what's available:
+**Pick a Starship prompt preset.** Starship comes with several ready-made prompt styles so you don't have to design one from scratch. See what's available:
 
 ```bash
 starship preset --list
@@ -1024,19 +1007,9 @@ Save one as your active config — for example, the Nerd Font icons preset:
 starship preset nerd-font-symbols -o ~/.config/starship.toml
 ```
 
-Then make sure Starship is actually turned on (this line is also covered in Step 36's full `.zshrc` walkthrough):
+`starship preset <name> -o <file>` writes a complete, working `starship.toml` for you. You can open that file later in `nvim` and tweak individual pieces once you know what you like.
 
-```bash
-eval "$(starship init zsh)"
-```
-
-**Why?** `starship preset <name> -o <file>` writes a complete, working `starship.toml` for you. You can open that file later in `nvim` and tweak individual pieces once you know what you like.
-
----
-
-## 36. fzf's Hidden Superpowers, and Building Out `.zshrc`
-
-Once fzf is sourced into your shell, it adds keyboard shortcuts that work anywhere on the command line:
+**Get to know fzf's shortcuts.** Once fzf is sourced into your shell, it adds keyboard shortcuts that work anywhere on the command line:
 
 | Shortcut | What happens |
 |---|---|
@@ -1047,7 +1020,11 @@ Once fzf is sourced into your shell, it adds keyboard shortcuts that work anywhe
 
 You can also chain it with other commands: `git checkout $(git branch | fzf)` lets you fuzzy-pick a branch to switch to.
 
-This is the last piece of shell setup — here's the full `.zshrc` block, tying together everything from the last few steps, explained line by line:
+**Now write the full `.zshrc`:**
+
+```bash
+nvim ~/.zshrc
+```
 
 ```bash
 eval "$(starship init zsh)"
@@ -1061,24 +1038,30 @@ SAVEHIST=10000
 setopt SHARE_HISTORY
 setopt HIST_IGNORE_ALL_DUPS
 alias update='sudo pacman -Syu'
+alias yayu='yay -Syu'
 alias search='nvim $(fzf --preview="bat --color=always {}")'
 ```
 
 | Line | Plain-English explanation |
 |---|---|
-| `eval "$(starship init zsh)"` | Turns on the Starship prompt you configured in Step 35. Keeping it near the top avoids conflicts with anything loaded after it. |
+| `eval "$(starship init zsh)"` | Turns on the Starship prompt you just configured. Keeping it near the top avoids conflicts with anything loaded after it. |
 | `export EDITOR='nvim'` | Tells other programs (like `git commit` or `sudo -e`) to open `nvim` instead of defaulting to `vi`. |
 | `source <(fzf --zsh)` | Loads fzf's keyboard shortcuts (`Ctrl+R`, `Ctrl+T`, `Alt+C`) straight from your installed fzf binary. |
-| `source .../zsh-syntax-highlighting.zsh` | Turns on the red/green live syntax highlighting from Step 34. |
-| `source .../zsh-autosuggestions.zsh` | Turns on the ghost-text history suggestions from Step 34. |
+| `source .../zsh-syntax-highlighting.zsh` | Turns on the red/green live syntax highlighting. |
+| `source .../zsh-autosuggestions.zsh` | Turns on the ghost-text history suggestions. |
 | `HISTFILE=~/.zsh_history` | The file where your command history gets saved permanently, instead of vanishing when you close the terminal. |
 | `HISTSIZE=10000` | How many past commands zsh keeps in memory while you're using it. |
 | `SAVEHIST=10000` | How many of those get actually written to `HISTFILE` on disk. |
 | `setopt SHARE_HISTORY` | Every open terminal window shares one live history — run something in one tab, and pressing ↑ in another tab sees it instantly. |
 | `setopt HIST_IGNORE_ALL_DUPS` | Skips saving a command to history if it's an exact repeat of the one right before it. |
 | `alias update='sudo pacman -Syu'` | A shortcut — type `update` instead of the full pacman upgrade command. |
+| `alias update yay='yay -Syu'` | Same idea, but updates official packages and AUR packages together via `yay`. |
 | `alias search='nvim $(fzf --preview="bat --color=always {}")'` | Fuzzy-find a file with a preview, then open it directly in `nvim` — two steps in one word. |
 
-> 💡 **Tip:** Group your `source` lines together near the top of the file, and keep aliases/history settings below them — it makes the file much easier to scan later once it grows.
+> ⚠️ **Order matters:** keep `zsh-syntax-highlighting` sourced *before* `zsh-autosuggestions` — it hooks deeply into how zsh handles what you type, and sourcing other plugins after it can quietly break the highlighting.
 
-> 💡 **Tip:** Now that `yay` (Step 24) is set up, you can add `alias yayu='yay -Syu'` here too — a single command that updates official packages and AUR packages together.
+Save and reload your shell (`source ~/.zshrc`, or just open a new terminal) — your prompt, plugins, and shortcuts are all live from here on.
+
+---
+
+That's the whole setup, start to finish: a booted, working Arch install with Hyprland, a themed bar and launcher, notifications, screenshots, an AUR helper, and a shell that's actually pleasant to type in. From here, everything is just iteration — tweak colors, add keybinds, install more from the AUR — at your own pace.
