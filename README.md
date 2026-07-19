@@ -295,7 +295,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 ## 18. Install Hyprland and Desktop Essentials
 
 ```bash
-pacman -S hyprland hyprpaper hyprpolkitagent xdg-desktop-portal-hyprland sddm pipewire pipewire-pulse wireplumber kitty zsh-autosuggestions zsh-syntax-highlighting starship waybar network-manager-applet ttf-jetbrains-mono-nerd nvim yazi fzf bat fastfetch swaync wofi grim wl-clipboard
+pacman -S hyprland hyprpaper hyprpolkitagent xdg-desktop-portal-hyprland sddm pipewire pipewire-pulse wireplumber kitty zsh-autosuggestions zsh-syntax-highlighting starship waybar network-manager-applet ttf-jetbrains-mono-nerd nvim yazi fzf bat fastfetch swaync wofi grim wl-clipboard firefox
 ```
 
 Grouped by what each thing does:
@@ -339,6 +339,11 @@ Grouped by what each thing does:
 |---|---|
 | `swaync` | Notification daemon and notification center — pops up notifications and gives you a panel to review/clear them |
 | `wofi` | An application launcher and general-purpose menu (for launching apps, and for menus other tools can pipe into) |
+
+**Browser**
+| Package | Purpose |
+|---|---|
+| `firefox` | A full-featured web browser — nothing web-related is installed by default, so this is what you'll actually use to get online once you're past the terminal |
 
 **Fonts**
 | Package | Purpose |
@@ -478,7 +483,7 @@ Everything you've installed so far came from the **official Arch repositories** 
 First, install the tools needed to actually *build* software from source:
 
 ```bash
-sudo pacman -S --needed base-devel git
+sudo pacman -S git base-devel
 ```
 
 Then clone and build `yay` itself (yay is an AUR package too, so it's installed "by hand" this one time):
@@ -493,8 +498,8 @@ rm -rf yay
 
 | Package/Command | Purpose |
 |---|---|
-| `base-devel` | A package group bundling `gcc`, `make`, `patch`, and other tools needed to compile source code |
 | `git` | Needed to download (`clone`) both `yay`'s source and, later, any AUR package's source |
+| `base-devel` | A package group bundling `gcc`, `make`, `patch`, and other tools needed to compile source code |
 | `makepkg -si` | Builds the package from its `PKGBUILD` (`-s` also grabs and installs any missing dependencies first) and `-i` installs the resulting package once it's built |
 
 Once installed, using `yay` feels just like `pacman`, except it searches both the official repos *and* the AUR:
@@ -895,6 +900,46 @@ If you don't see it, add it below `local mainMod = "SUPER"` alongside your other
 > This writes a timestamped PNG to `~/Pictures/` and still copies it to the clipboard in the same keypress.
 
 > 💡 **Tip:** This setup always grabs the *whole* screen. If you want to drag-select a specific region instead, pair `grim` with `slurp` (`sudo pacman -S slurp`) and swap the command for `grim -g "$(slurp)" - | wl-copy` — `slurp` lets you click-and-drag an area, and its output tells `grim` exactly which pixels to capture.
+
+---
+
+### Optional: A Few More Personal Keybinds
+
+Everything below is **personal preference**, not a required part of the setup — feel free to skip binds you don't want, or remap the keys to whatever feels natural to you. Add these into the same **KEYBINDINGS** section, below `local mainMod = "SUPER"`, alongside the wofi and screenshot binds from Steps 29 and 30:
+
+```lua
+hl.bind(mainMod .. " + E", hl.dsp.exec_cmd("kitty zsh -ic 'yazi'"))
+hl.bind(mainMod .. " + F", hl.dsp.window.float({ action = "toggle" }))
+hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("wofi --show drun"))
+hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("poweroff"))
+hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("reboot"))
+hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("grim - | wl-copy"))
+hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
+hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("pkill waybar && waybar"))
+hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("firefox"))
+-- Move focus with mainMod + arrow keys
+hl.bind(mainMod .. " + h", hl.dsp.focus({ direction = "left" }))
+hl.bind(mainMod .. " + l", hl.dsp.focus({ direction = "right" }))
+hl.bind(mainMod .. " + k", hl.dsp.focus({ direction = "up" }))
+hl.bind(mainMod .. " + j", hl.dsp.focus({ direction = "down" }))
+```
+
+A quick rundown of what each one does:
+
+| Bind | What it does |
+|---|---|
+| `SUPER + E` | Opens a `kitty` terminal running `yazi` directly, instead of opening a blank terminal and typing `yazi` yourself |
+| `SUPER + F` | Toggles the focused window between tiled and floating |
+| `SUPER + D` | Opens wofi as an app launcher (same as Step 29 — listed again here since it lives in the same block) |
+| `SUPER + C` | Powers off the machine immediately — no confirmation prompt, so it's easy to hit by accident if you remap other binds nearby |
+| `SUPER + V` | Reboots the machine immediately, same caveat as above |
+| `SUPER + SHIFT + S` | Screenshot to clipboard (same as Step 30 — listed again here since it lives in the same block) |
+| `SUPER + P` | Toggles the focused window into "pseudotiling" — it keeps its own size within the tiling layout instead of being auto-resized |
+| `SUPER + SHIFT + R` | Kills and restarts `waybar` — handy after editing `config.jsonc` or `style.css`, since waybar doesn't hot-reload those changes on its own |
+| `SUPER + B` | Launches Firefox |
+| `SUPER + h/j/k/l` | Moves keyboard focus between windows in the given direction, vim-style — matches the same `h`/`j`/`k`/`l` muscle memory from `nvim` and `yazi` |
+
+> ⚠️ Since `SUPER + C` and `SUPER + V` trigger `poweroff`/`reboot` with zero confirmation, double check you don't fat-finger them next to other binds you use a lot.
 
 ---
 
