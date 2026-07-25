@@ -1080,7 +1080,7 @@ SAVEHIST=10000
 setopt SHARE_HISTORY
 setopt HIST_IGNORE_ALL_DUPS
 alias update='sudo pacman -Syu'
-alias yayu='yay -Syu'
+alias updateyay='yay -Syu'
 alias search='nvim $(fzf --preview="bat --color=always {}")'
 ```
 
@@ -1097,7 +1097,7 @@ alias search='nvim $(fzf --preview="bat --color=always {}")'
 | `setopt SHARE_HISTORY` | Every open terminal window shares one live history — run something in one tab, and pressing ↑ in another tab sees it instantly. |
 | `setopt HIST_IGNORE_ALL_DUPS` | Skips saving a command to history if it's an exact repeat of the one right before it. |
 | `alias update='sudo pacman -Syu'` | A shortcut — type `update` instead of the full pacman upgrade command. |
-| `alias update yay='yay -Syu'` | Same idea, but updates official packages and AUR packages together via `yay`. |
+| `alias updateyay='yay -Syu'` | Same idea, but updates official packages and AUR packages together via `yay`. |
 | `alias search='nvim $(fzf --preview="bat --color=always {}")'` | Fuzzy-find a file with a preview, then open it directly in `nvim` — two steps in one word. |
 
 > ⚠️ **Order matters:** keep `zsh-syntax-highlighting` sourced *before* `zsh-autosuggestions` — it hooks deeply into how zsh handles what you type, and sourcing other plugins after it can quietly break the highlighting.
