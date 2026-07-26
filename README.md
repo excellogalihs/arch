@@ -70,6 +70,8 @@ Everything below assumes you've already booted from the Arch ISO and you're star
 32. [Install an AUR Helper (yay)](#32-install-an-aur-helper-yay)
 33. [Finish Your Shell: Plugins, Prompt, Zoxide, Eza, and `.zshrc`](#33-finish-your-shell-plugins-prompt-zoxide-eza-and-zshrc)
 
+
+
 ---
 
 # Part 1 — Installing Arch Linux
