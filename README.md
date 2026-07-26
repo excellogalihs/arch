@@ -295,7 +295,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 ## 18. Install Hyprland and Desktop Essentials
 
 ```bash
-pacman -S hyprland hyprpaper hyprpolkitagent xdg-desktop-portal-hyprland sddm pipewire pipewire-pulse wireplumber kitty zsh-autosuggestions zsh-syntax-highlighting starship waybar network-manager-applet ttf-jetbrains-mono-nerd nvim yazi fzf bat fastfetch swaync wofi grim wl-clipboard firefox
+pacman -S hyprland hyprpaper hyprpolkitagent xdg-desktop-portal-hyprland sddm pipewire pipewire-pulse wireplumber kitty zsh-autosuggestions zsh-syntax-highlighting starship waybar ttf-jetbrains-mono-nerd nvim yazi fzf bat zoxide eza fastfetch swaync wofi grim wl-clipboard firefox
 ```
 
 Grouped by what each thing does:
@@ -332,7 +332,6 @@ Grouped by what each thing does:
 | Package | Purpose |
 |---|---|
 | `waybar` | The status bar along the top/bottom of your screen |
-| `network-manager-applet` | A Wi-Fi icon/menu in your tray |
 
 **Notifications & launcher**
 | Package | Purpose |
@@ -348,7 +347,7 @@ Grouped by what each thing does:
 **Fonts**
 | Package | Purpose |
 |---|---|
-| `ttf-jetbrains-mono-nerd` | A coding font patched with icons (needed for waybar/kitty icons to render) |
+| `ttf-jetbrains-mono-nerd` | A coding font patched with icons (needed for waybar/kitty icons to render, and for `eza`'s icons in Step 34) |
 
 **Screenshots & clipboard**
 | Package | Purpose |
@@ -363,6 +362,8 @@ Grouped by what each thing does:
 | `yazi` | Terminal file manager |
 | `fzf` | Fuzzy finder for files, history, and more |
 | `bat` | A nicer `cat`, with syntax highlighting |
+| `zoxide` | A smarter `cd` that learns your most-used directories and jumps to them by typing just part of the name |
+| `eza` | A modern replacement for `ls`, with colors, icons, and a built-in tree view |
 | `fastfetch` | Prints a system-info summary with ASCII art |
 
 > 💡 **Tip:** This one command installs everything at once. If it fails partway through (e.g. a mirror timing out), just re-run the same command — `pacman` skips anything already installed.
@@ -761,7 +762,7 @@ hl.on("hyprland.start", function()
 end)
 ```
 
-**Why laid out this way?** `modules-left/center/right` are the bar's three zones. Workspaces go on the left (near your window list), the clock sits center (glanceable at a distance), and system status — notifications, network, volume, battery, tray icons — groups on the right, matching the layout most desktop bars use. The `custom/notification` module is just a clickable bell icon that talks to `swaync` (already turned on in Step 26) via `swaync-client` — waybar itself has no idea what a notification even is, it's only forwarding clicks. The `tray` module is included in `modules-right` because Step 33 hooks the Wi-Fi tray icon into it.
+**Why laid out this way?** `modules-left/center/right` are the bar's three zones. Workspaces go on the left (near your window list), the clock sits center (glanceable at a distance), and system status — notifications, network, volume, battery, tray icons — groups on the right, matching the layout most desktop bars use. The `custom/notification` module is just a clickable bell icon that talks to `swaync` (already turned on in Step 26) via `swaync-client` — waybar itself has no idea what a notification even is, it's only forwarding clicks. The `tray` module is included in `modules-right` so any app that wants a tray icon (volume mixers, Bluetooth managers, etc., if you install them later) has somewhere to dock — Wi-Fi status itself is handled through `nmtui`/`nmcli` in Step 33 instead of a tray icon.
 
 ---
 
@@ -1006,20 +1007,7 @@ A simple text menu opens:
 
 **Why not `iwctl` again?** `iwctl` (from Step 1) only works inside the temporary live USB environment. Now that `networkmanager` is installed and running, `nmtui` is its friendly menu — and unlike `iwctl`, it remembers networks and reconnects automatically every time you boot.
 
-### Add `nm-applet` to autostart
-
-You already installed `network-manager-applet` back in Step 18, but it won't run on its own — it needs to be launched when Hyprland starts, just like `hyprpaper` and `waybar`. Go back to the **AUTOSTART** block one more time and add `nm-applet` into the chained line — it should now look like the full default:
-
-```lua
-hl.on("hyprland.start", function()
-	hl.exec_cmd("systemctl --user start hyprpolkitagent")
-	hl.exec_cmd("waybar & hyprpaper & nm-applet & swaync")
-end)
-```
-
-**Why?** `nm-applet` is the little Wi-Fi icon that sits in your tray (next to the volume/battery icons) once `waybar`'s tray module picks it up. Without this line, NetworkManager itself still auto-connects to known networks fine on boot — but you'd have no visual indicator or quick-click menu to switch networks, check signal strength, or forget a network without dropping back into `nmtui` every time.
-
-> 💡 **Tip:** If you don't see the tray icon appear after adding this, double check `"tray"` is included in your `modules-right` list in `~/.config/waybar/config.jsonc` (already added in Step 28) — the applet runs invisibly without a tray to dock into.
+> 💡 **No tray icon, and that's fine:** this guide skips a Wi-Fi tray applet (like `nm-applet`) on purpose — NetworkManager auto-connects to known networks on boot with zero extra setup, and `nmtui`/`nmcli` cover switching networks, checking signal, and forgetting a network just as well from the terminal. If you'd rather have a clickable tray icon later, `sudo pacman -S network-manager-applet` and add `nm-applet` into the AUTOSTART block's chained `hl.exec_cmd(...)` line the same way `waybar`, `hyprpaper`, and `swaync` are chained together.
 
 To just check your connection status without the menu:
 
@@ -1029,9 +1017,9 @@ nmcli device status
 
 ---
 
-## 34. Finish Your Shell: Plugins, Prompt, and `.zshrc`
+## 34. Finish Your Shell: Plugins, Prompt, Zoxide, Eza, and `.zshrc`
 
-This last step brings together everything your shell needs: the two zsh plugins from Step 18, a Starship prompt, and fzf's keyboard shortcuts. Rather than editing `.zshrc` piece by piece, you'll write it once, in full.
+This last step brings together everything your shell needs: the two zsh plugins from Step 18, a Starship prompt, fzf's keyboard shortcuts, and two quality-of-life replacements for `cd` and `ls` — `zoxide` and `eza`. Rather than editing `.zshrc` piece by piece, you'll write it once, in full.
 
 **What each plugin actually does:**
 - **zsh-autosuggestions** — as you type, it shows a faint, greyed-out guess of the rest of the command based on your history. Press the `→` right-arrow key to accept it.
@@ -1062,6 +1050,10 @@ starship preset nerd-font-symbols -o ~/.config/starship.toml
 
 You can also chain it with other commands: `git checkout $(git branch | fzf)` lets you fuzzy-pick a branch to switch to.
 
+**What `zoxide` and `eza` add on top:**
+- **zoxide** tracks every directory you `cd` into and how often you visit it (its "frecency" algorithm — a mix of frequency and recency). After it's learned your habits a little, you can jump straight to `~/Projects/litelaw` from anywhere by typing just `z lite` instead of the full path.
+- **eza** is a drop-in `ls` replacement with color-coded file types, file/folder icons (using the Nerd Font from Step 18), and a built-in `--tree` view so you can see nested folders without needing a separate `tree` command.
+
 **Now write the full `.zshrc`:**
 
 ```bash
@@ -1070,6 +1062,7 @@ nvim ~/.zshrc
 
 ```bash
 eval "$(starship init zsh)"
+eval "$(zoxide init zsh)"
 export EDITOR='nvim'
 source <(fzf --zsh)
 source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
@@ -1082,11 +1075,15 @@ setopt HIST_IGNORE_ALL_DUPS
 alias update='sudo pacman -Syu'
 alias updateyay='yay -Syu'
 alias search='nvim $(fzf --preview="bat --color=always {}")'
+alias cd='z'
+alias ls='eza --tree --icons --level=1'
+fastfetch
 ```
 
 | Line | Plain-English explanation |
 |---|---|
 | `eval "$(starship init zsh)"` | Turns on the Starship prompt you just configured. Keeping it near the top avoids conflicts with anything loaded after it. |
+| `eval "$(zoxide init zsh)"` | Initializes zoxide for zsh, which is what makes the `z` command (and the `cd` alias below) actually work. |
 | `export EDITOR='nvim'` | Tells other programs (like `git commit` or `sudo -e`) to open `nvim` instead of defaulting to `vi`. |
 | `source <(fzf --zsh)` | Loads fzf's keyboard shortcuts (`Ctrl+R`, `Ctrl+T`, `Alt+C`) straight from your installed fzf binary. |
 | `source .../zsh-syntax-highlighting.zsh` | Turns on the red/green live syntax highlighting. |
@@ -1099,10 +1096,17 @@ alias search='nvim $(fzf --preview="bat --color=always {}")'
 | `alias update='sudo pacman -Syu'` | A shortcut — type `update` instead of the full pacman upgrade command. |
 | `alias updateyay='yay -Syu'` | Same idea, but updates official packages and AUR packages together via `yay`. |
 | `alias search='nvim $(fzf --preview="bat --color=always {}")'` | Fuzzy-find a file with a preview, then open it directly in `nvim` — two steps in one word. |
+| `alias cd='z'` | Redirects the `cd` command itself to zoxide's `z` — you keep typing `cd` out of habit, but now it can jump to any frecently-visited folder by a partial name, not just direct children of your current directory. |
+| `alias ls='eza --tree --icons --level=1'` | Replaces plain `ls` with `eza`, showing a one-level-deep tree with file-type icons every time you list a directory. |
+| `fastfetch` | Prints your system-info summary automatically every time you open a new terminal, instead of you having to type it manually. |
 
 > ⚠️ **Order matters:** keep `zsh-syntax-highlighting` sourced *before* `zsh-autosuggestions` — it hooks deeply into how zsh handles what you type, and sourcing other plugins after it can quietly break the highlighting.
 
-Save and reload your shell (`source ~/.zshrc`, or just open a new terminal) — your prompt, plugins, and shortcuts are all live from here on.
+> 💡 **Tip:** Because `cd` is now aliased to `z`, plain `cd` still works fine for direct paths (`cd ~/Projects`) since zoxide falls back to normal behavior when you give it an exact path — you only notice the difference when you type a partial name from somewhere else on the filesystem. If you ever need the real, un-aliased `cd` for a script or edge case, use `command cd` or `\cd` to bypass the alias.
+
+> 💡 **Tip:** `zoxide` only knows about directories after you've actually `cd`'d into them at least once — it builds its database as you go, so don't expect `z` jumps to work for folders you haven't visited yet.
+
+Save and reload your shell (`source ~/.zshrc`, or just open a new terminal) — your prompt, plugins, zoxide, eza, and shortcuts are all live from here on.
 
 ---
 
