@@ -2161,8 +2161,8 @@ rm -rf paru
 This last step brings together everything your shell needs: the two zsh plugins from Step 18, a Starship prompt, fzf's keyboard shortcuts, and two quality-of-life replacements for `cd` and `ls` — `zoxide` and `eza`. Rather than editing `.zshrc` piece by piece, you'll write it once, in full.
 
 **What each plugin actually does:**
-- **zsh-autosuggestions** — as you type, it shows a faint, greyed-out guess of the rest of the command based on your history. Press the `→` right-arrow key to accept it.
 - **zsh-syntax-highlighting** — colors what you're typing green if it's a valid, runnable command, and red if it isn't — so you catch typos before hitting Enter.
+- **zsh-autosuggestions** — as you type, it shows a faint, greyed-out guess of the rest of the command based on your history. Press the `→` right-arrow key to accept it.
 
 **Pick a Starship prompt preset.** Starship comes with several ready-made prompt styles so you don't have to design one from scratch. See what's available:
 
