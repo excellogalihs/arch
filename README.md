@@ -690,6 +690,7 @@ window#waybar {
 #workspaces button {
     padding: 0 8px;
     color: white;
+    margin: 5px 0px 5px 5px;
 }
 
 #workspaces button.active {
@@ -698,8 +699,9 @@ window#waybar {
     border-radius: 6px;
 }
 
-#clock, #network, #pulseaudio, #battery, #tray, #custom-notification {
+#clock, #network, #pulseaudio, #battery, #cpu, #memory{
     padding: 0 8px;
+    margin: 5px;
 }
 ```
 
