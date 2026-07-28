@@ -876,19 +876,17 @@ Everything below is **personal preference**, not a required part of the setup �
 
 ```lua
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd("kitty zsh -ic 'yazi'"))
-hl.bind(mainMod .. " + F", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("wofi --show drun"))
 hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("poweroff"))
 hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("reboot"))
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("grim - | wl-copy"))
-hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("pkill waybar && waybar"))
 hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("firefox"))
 -- Move focus with mainMod + arrow keys
-hl.bind(mainMod .. " + h", hl.dsp.focus({ direction = "left" }))
-hl.bind(mainMod .. " + l", hl.dsp.focus({ direction = "right" }))
-hl.bind(mainMod .. " + k", hl.dsp.focus({ direction = "up" }))
-hl.bind(mainMod .. " + j", hl.dsp.focus({ direction = "down" }))
+hl.bind(mainMod .. " + H", hl.dsp.focus({ direction = "left" }))
+hl.bind(mainMod .. " + L", hl.dsp.focus({ direction = "right" }))
+hl.bind(mainMod .. " + K", hl.dsp.focus({ direction = "up" }))
+hl.bind(mainMod .. " + J", hl.dsp.focus({ direction = "down" }))
 ```
 
 A quick rundown of what each one does:
@@ -896,15 +894,13 @@ A quick rundown of what each one does:
 | Bind | What it does |
 |---|---|
 | `SUPER + E` | Opens a `kitty` terminal running `yazi` directly, instead of opening a blank terminal and typing `yazi` yourself |
-| `SUPER + F` | Toggles the focused window between tiled and floating |
 | `SUPER + D` | Opens wofi as an app launcher (same as Step 27 — listed again here since it lives in the same block) |
 | `SUPER + C` | Powers off the machine immediately — no confirmation prompt, so it's easy to hit by accident if you remap other binds nearby |
 | `SUPER + V` | Reboots the machine immediately, same caveat as above |
 | `SUPER + SHIFT + S` | Screenshot to clipboard (same as above — listed again here since it lives in the same block) |
-| `SUPER + P` | Toggles the focused window into "pseudotiling" — it keeps its own size within the tiling layout instead of being auto-resized |
 | `SUPER + SHIFT + R` | Kills and restarts `waybar` — handy after editing `config.jsonc` or `style.css`, since waybar doesn't hot-reload those changes on its own |
 | `SUPER + B` | Launches Firefox |
-| `SUPER + h/j/k/l` | Moves keyboard focus between windows in the given direction, vim-style — matches the same `h`/`j`/`k`/`l` muscle memory from `nvim` and `yazi` |
+| `SUPER + H/J/K/L` | Moves keyboard focus between windows in the given direction, vim-style — matches the same `H`/`J`/`K`/`L` muscle memory from `nvim` and `yazi` |
 
 > ⚠️ Since `SUPER + C` and `SUPER + V` trigger `poweroff`/`reboot` with zero confirmation, double check you don't fat-finger them next to other binds you use a lot.
 
