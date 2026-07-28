@@ -1811,27 +1811,28 @@ nvim ~/.config/waybar/style.css
 * {
     font-family: "JetBrainsMono Nerd Font";
     font-size: 13px;
+    font-weight: 700;
     min-height: 0;
 }
 
 window#waybar {
-    background-color: rgba(20, 20, 30, 0.85);
-    color: #cdd6f4;
+    background-color: black;
+    color: white;
 }
 
 #workspaces button {
     padding: 0 8px;
-    color: #cdd6f4;
+    color: white;
 }
 
 #workspaces button.active {
-    background-color: #89b4fa;
-    color: #1e1e2e;
-    border-radius: 6px;
+    background-color: white;
+    color: black;
+    border-radius: 8px;
 }
 
 #clock, #network, #pulseaudio, #battery, #tray, #custom-notification {
-    padding: 0 10px;
+    padding: 0 8px;
 }
 ```
 
@@ -1897,29 +1898,29 @@ nvim ~/.config/wofi/style.css
 window {
     font-family: "JetBrainsMono Nerd Font";
     font-size: 14px;
-    background-color: rgba(20, 20, 30, 0.95);
+    background-color: black;
     border-radius: 12px;
-    border: 2px solid #89b4fa;
+    border: 2px solid transparent;
 }
 
 #input {
-    margin: 10px;
+    margin: 8px;
     padding: 8px;
     border-radius: 8px;
-    background-color: #1e1e2e;
-    color: #cdd6f4;
+    background-color: #404040;
+    color: white;
     border: none;
 }
 
 #inner-box {
-    margin: 5px;
-    padding: 5px;
+    margin: 8px;
+    padding: 8px;
     background-color: transparent;
 }
 
 #outer-box {
-    margin: 5px;
-    padding: 10px;
+    margin: 8px;
+    padding: 8px;
     background-color: transparent;
 }
 
@@ -1929,15 +1930,15 @@ window {
 }
 
 #entry:selected {
-    background-color: #89b4fa;
+    background-color: gray;
 }
 
 #entry:selected #text {
-    color: #1e1e2e;
+    color: white;
 }
 
 #text {
-    color: #cdd6f4;
+    color: white;
 }
 ```
 
