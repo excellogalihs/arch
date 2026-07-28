@@ -765,29 +765,29 @@ nvim ~/.config/wofi/style.css
 window {
     font-family: "JetBrainsMono Nerd Font";
     font-size: 14px;
-    background-color: rgba(20, 20, 30, 0.95);
+    background-color: black;
     border-radius: 12px;
-    border: 2px solid #89b4fa;
+    border: 2px solid transparent;
 }
 
 #input {
-    margin: 10px;
+    margin: 8px;
     padding: 8px;
     border-radius: 8px;
-    background-color: #1e1e2e;
+    background-color: #404040;
     color: white;
     border: none;
 }
 
 #inner-box {
-    margin: 5px;
-    padding: 5px;
+    margin: 8px;
+    padding: 8px;
     background-color: transparent;
 }
 
 #outer-box {
-    margin: 5px;
-    padding: 10px;
+    margin: 8px;
+    padding: 8px;
     background-color: transparent;
 }
 
