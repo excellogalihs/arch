@@ -696,7 +696,7 @@ window#waybar {
 #workspaces button.active {
     background-color: white;
     color: black;
-    border-radius: 6px;
+    border-radius: 8px;
 }
 
 #clock, #network, #pulseaudio, #battery, #cpu, #memory{
