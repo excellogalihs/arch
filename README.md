@@ -636,16 +636,16 @@ nvim ~/.config/waybar/config.jsonc
     "layer": "top",
     "modules-left": ["hyprland/workspaces"],
     "modules-center": ["clock"],
-    "modules-right": ["custom/notification", "pulseaudio", "network", "cpu", "memory", "tray"],
+    "modules-right": ["pulseaudio", "network", "cpu", "memory"],
     "battery": {
         "format": "{capacity}% {icon}",
-        "format-icons": ["", "", "", "", ""]
+        "format-icons": ["", "", "", "", ""]
     },
     "clock": {
         "format": "󰥔 {:%a, %d. %b  %H:%M}"
     },
     "cpu": {
-        "format": " {}%"
+        "format": " {}%"
     },
     "hyprland/workspaces": {
         "persistent-workspaces": {
@@ -653,35 +653,19 @@ nvim ~/.config/waybar/config.jsonc
         }
     },
     "memory": {
-        "format": " {}%"
+        "format": " {}%"
     },
     "network": {
-        "format": "  {essid}",
-        "tooltip": false
-    },
-    "custom/notification": {
+        "format": "  {essid}",
         "tooltip": false,
-        "format": "{icon}",
-        "format-icons": {
-            "notification": "<span foreground='red'><sup></sup></span>",
-            "none": "",
-            "dnd-notification": "<span foreground='red'><sup></sup></span>",
-            "dnd-none": ""
-        },
-        "return-type": "json",
-        "exec-if": "which swaync-client",
-        "exec": "swaync-client -swb",
-        "on-click": "swaync-client -t -sw",
-        "on-click-right": "swaync-client -d -sw",
-        "escape": true
     },
     "pulseaudio": {
         "format": "{icon} {volume}%",
         "format-icons": {
-            "default": ["", " ", " "]
+            "default": ["", " ", " "]
         },
         "scroll-step": 2
-    }
+    },
 }
 ```
 
@@ -694,28 +678,28 @@ nvim ~/.config/waybar/style.css
 ```css
 * {
     font-family: "JetBrainsMono Nerd Font";
-    font-size: 13px;
-    min-height: 0;
+    font-size: 14px;
+    font-weight: 700;
 }
 
 window#waybar {
-    background-color: rgba(20, 20, 30, 0.85);
-    color: #cdd6f4;
+    background-color: black;
+    color: white;
 }
 
 #workspaces button {
     padding: 0 8px;
-    color: #cdd6f4;
+    color: white;
 }
 
 #workspaces button.active {
-    background-color: #89b4fa;
-    color: #1e1e2e;
+    background-color: white;
+    color: black;
     border-radius: 6px;
 }
 
 #clock, #network, #pulseaudio, #battery, #tray, #custom-notification {
-    padding: 0 10px;
+    padding: 0 8px;
 }
 ```
 
@@ -791,7 +775,7 @@ window {
     padding: 8px;
     border-radius: 8px;
     background-color: #1e1e2e;
-    color: #cdd6f4;
+    color: white;
     border: none;
 }
 
@@ -813,15 +797,15 @@ window {
 }
 
 #entry:selected {
-    background-color: #89b4fa;
+    background-color: gray;
 }
 
 #entry:selected #text {
-    color: #1e1e2e;
+    color: white;
 }
 
 #text {
-    color: #cdd6f4;
+    color: white;
 }
 ```
 
