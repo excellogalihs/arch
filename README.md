@@ -694,7 +694,7 @@ window#waybar {
 }
 
 #workspaces button.active {
-    background-color: #cdd6f4;
+    background-color: white;
     color: black;
     border-radius: 5px;
 }
