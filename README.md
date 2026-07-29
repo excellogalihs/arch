@@ -1891,47 +1891,47 @@ nvim ~/.config/wofi/style.css
 window {
     font-family: "JetBrainsMono Nerd Font";
     font-size: 14px;
-    background-color: black;
-    border-radius: 12px;
-    border: 2px solid transparent;
+    background-color: #000000;
+    color: #ffffff;
+    border-radius: 5;
 }
 
 #input {
-    margin: 8px;
-    padding: 8px;
-    border-radius: 8px;
-    background-color: #404040;
-    color: white;
-    border: none;
-}
-
-#inner-box {
-    margin: 8px;
-    padding: 8px;
+    margin: 6px;
+    padding: 6px;
     background-color: transparent;
+    color: #ffffff;
+    border-radius: 5;
 }
 
 #outer-box {
-    margin: 8px;
-    padding: 8px;
+    margin: 5px;
+    padding: 5;
+    background-color: transparent;
+}
+
+#inner-box {
+    margin: 5;
+    padding: 5;
     background-color: transparent;
 }
 
 #entry {
-    padding: 8px;
-    border-radius: 8px;
+    padding: 5px;
+    background-color: transparent;
+    border-radius: 5;
 }
 
 #entry:selected {
-    background-color: gray;
+    background-color: #ffffff;
 }
 
 #entry:selected #text {
-    color: white;
+    color: #000000;
 }
 
 #text {
-    color: white;
+    color: #ffffff;
 }
 ```
 
