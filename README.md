@@ -1819,8 +1819,6 @@ window#waybar {
 
 #pulseaudio,
 #network,
-#cpu,
-#memory,
 #battery {
     padding: 0 5px;
     margin: 5px;
@@ -1891,47 +1889,45 @@ nvim ~/.config/wofi/style.css
 window {
     font-family: "JetBrainsMono Nerd Font";
     font-size: 14px;
-    background-color: #000000;
-    color: #ffffff;
-    border-radius: 5;
+    background-color: black;
+    border-radius: 5px;
 }
 
 #input {
-    margin: 6px;
-    padding: 6px;
+    margin: 5px;
+    padding: 5px;
+    border-radius: 5px;
+    background-color: #404040;
+    color: white;
+}
+
+#inner-box {
+    margin: 5px;
+    padding: 5px;
     background-color: transparent;
-    color: #ffffff;
-    border-radius: 5;
 }
 
 #outer-box {
     margin: 5px;
-    padding: 5;
-    background-color: transparent;
-}
-
-#inner-box {
-    margin: 5;
-    padding: 5;
+    padding: 5px;
     background-color: transparent;
 }
 
 #entry {
     padding: 5px;
-    background-color: transparent;
-    border-radius: 5;
+    border-radius: 5px;
 }
 
 #entry:selected {
-    background-color: #ffffff;
+    background-color: gray;
 }
 
 #entry:selected #text {
-    color: #000000;
+    color: white;
 }
 
 #text {
-    color: #ffffff;
+    color: white;
 }
 ```
 
