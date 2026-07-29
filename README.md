@@ -1836,7 +1836,7 @@ hl.on("hyprland.start", function()
 end)
 ```
 
-**Why laid out this way?** `modules-left/center/right` are the bar's three zones. Workspaces go on the left (near your window list), the clock sits center (glanceable at a distance), and system status — notifications, network, volume, battery, tray icons — groups on the right, matching the layout most desktop bars use. The `custom/notification` module is just a clickable bell icon that talks to `swaync` (already turned on in Step 24) via `swaync-client` — waybar itself has no idea what a notification even is, it's only forwarding clicks. The `tray` module is included in `modules-right` so any app that wants a tray icon (volume mixers, Bluetooth managers, etc., if you install them later) has somewhere to dock — Wi-Fi status itself is handled through `nmtui`/`nmcli` in Step 31 instead of a tray icon.
+**Why laid out this way?** `modules-left/center/right` are the bar's three zones. Workspaces go on the left (near your window list), the clock sits center (glanceable at a distance), and system status — notifications, network, volume, battery, tray icons — groups on the right, matching the layout most desktop bars use.
 
 ---
 
@@ -1938,8 +1938,6 @@ window {
 | `show=drun` | Makes app-launcher mode the default if you ever run bare `wofi` without `--show drun` |
 | `gtk_dark=true` | Asks GTK to render its bits (like scrollbars) in dark mode too, so nothing looks out of place |
 | `allow_images=true` / `image_size` | Shows each app's icon next to its name, sized to fit |
-
-**Why match the waybar colors?** `#89b4fa` (the blue accent) and `#1e1e2e`/`#cdd6f4` (background/text) are the same values used in Step 26's `waybar/style.css` — reusing them here just keeps the bar, launcher, and (if you style it later) swaync panel feeling like one consistent theme instead of three unrelated GTK apps bolted together.
 
 After saving, reopen wofi with your new keybind (`SUPER+D`) to see the changes — no reload command needed, it re-reads its config fresh every time it launches.
 
