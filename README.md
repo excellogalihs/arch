@@ -636,7 +636,7 @@ nvim ~/.config/waybar/config.jsonc
     "layer": "top",
     "modules-left": ["hyprland/workspaces"],
     "modules-center": ["clock"],
-    "modules-right": ["pulseaudio", "network", "cpu", "memory"],
+    "modules-right": ["pulseaudio", "network", "battery"],
     "battery": {
         "format": "{capacity}% {icon}",
         "format-icons": ["", "", "", "", ""]
@@ -688,20 +688,20 @@ window#waybar {
 }
 
 #workspaces button {
-    padding: 0 8px;
+    padding: 0 5px;
+    margin: 5px 5px;
     color: white;
-    margin: 5px 0px 5px 5px;
 }
 
 #workspaces button.active {
-    background-color: white;
+    background-color: #cdd6f4;
     color: black;
-    border-radius: 8px;
+    border-radius: 5px;
 }
 
-#clock, #network, #pulseaudio, #battery, #cpu, #memory{
-    padding: 0 8px;
-    margin: 5px;
+#pulseaudio, #network, #battery {
+    padding: 0 5px;
+    margin: 5px 5px;
 }
 ```
 
