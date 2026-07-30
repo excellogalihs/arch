@@ -1748,28 +1748,14 @@ nvim ~/.config/waybar/config.jsonc
     "layer": "top",
     "modules-left": ["hyprland/workspaces"],
     "modules-center": ["clock"],
-    "modules-right": ["pulseaudio", "network", "cpu", "memory"],
-    "battery": {
-        "format": "{capacity}% {icon}",
-        "format-icons": ["", "", "", "", ""]
-    },
-    "clock": {
-        "format": "󰥔 {:%a, %d. %b  %H:%M}"
-    },
-    "cpu": {
-        "format": " {}%"
-    },
+    "modules-right": ["pulseaudio", "network", "battery"],
     "hyprland/workspaces": {
         "persistent-workspaces": {
             "*": [1, 2, 3, 4, 5]
         }
     },
-    "memory": {
-        "format": " {}%"
-    },
-    "network": {
-        "format": "  {essid}",
-        "tooltip": false,
+    "clock": {
+        "format": "󰥔 {:%a, %d. %b  %H:%M}"
     },
     "pulseaudio": {
         "format": "{icon} {volume}%",
@@ -1777,6 +1763,14 @@ nvim ~/.config/waybar/config.jsonc
             "default": ["", " ", " "]
         },
         "scroll-step": 2
+    },
+    "network": {
+        "format": "  {essid}",
+        "tooltip": false,
+    },
+    "battery": {
+        "format": "{capacity}% {icon}",
+        "format-icons": ["", "", "", "", ""]
     },
 }
 ```
