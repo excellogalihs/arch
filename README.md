@@ -336,7 +336,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 ## 18. Install Hyprland and Desktop Essentials
 
 ```bash
-pacman -S hyprland hyprpaper hyprpolkitagent xdg-desktop-portal-hyprland sddm pipewire pipewire-pulse wireplumber kitty zsh-syntax-highlighting zsh-autosuggestions starship waybar ttf-jetbrains-mono-nerd nvim yazi fzf bat zoxide eza fastfetch swaync wofi grim wl-clipboard firefox
+pacman -S hyprland hyprpaper hyprpolkitagent xdg-desktop-portal-hyprland sddm pipewire pipewire-pulse wireplumber kitty zsh-syntax-highlighting zsh-autosuggestions starship waybar swaync wofi firefox ttf-jetbrains-mono-nerd grim wl-clipboard nvim yazi fzf bat zoxide eza fastfetch
 ```
 
 Grouped by what each thing does:
