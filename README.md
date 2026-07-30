@@ -1992,7 +1992,7 @@ A quick rundown of what each one does:
 | `SUPER + SHIFT + S` | Screenshot to clipboard (same as above — listed again here since it lives in the same block) |
 | `SUPER + SHIFT + R` | Kills and restarts `waybar` — handy after editing `config.jsonc` or `style.css`, since waybar doesn't hot-reload those changes on its own |
 | `SUPER + B` | Launches Firefox |
-| `SUPER + h/j/k/l` | Moves keyboard focus between windows in the given direction, vim-style — matches the same `h`/`j`/`k`/`l` muscle memory from `nvim` and `yazi` |
+| `SUPER + H/J/K/L` | Moves keyboard focus between windows in the given direction, vim-style — matches the same `H`/`J`/`K`/`L` muscle memory from `nvim` and `yazi` |
 
 > ⚠️ Since `SUPER + C` and `SUPER + V` trigger `poweroff`/`reboot` with zero confirmation, double check you don't fat-finger them next to other binds you use a lot.
 
