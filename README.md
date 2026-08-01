@@ -1,39 +1,39 @@
-# Arch Linux + Hyprland Installation Guide
+# Arch Linux + Hyprland Install Guide
 
-This guide walks you from a blank drive to a fully working **Arch Linux + Hyprland** desktop — no prior Arch experience needed.
+Blank drive to a working Arch + Hyprland desktop. No prior Arch experience needed, just patience.
 
-> **New to Arch?** Unlike Ubuntu or Fedora, Arch doesn't hold your hand — there's no graphical installer, no desktop pre-installed, and no "click Next 5 times" setup. You install it piece by piece from a terminal, which sounds scary but is actually just typing one command at a time and reading what it tells you. This guide explains **what each command does and why**, not just what to type.
+> Coming from Ubuntu or Fedora? Arch skips the graphical installer entirely — no "click Next 5 times." You're typing commands one at a time and reading what they spit back at you. Sounds intimidating, isn't really. This guide tells you what each command actually does, not just what to paste.
 
-## How to read this guide
+## Reading this guide
 
-- 🔧 **Command blocks** are things you type into the terminal, exactly as shown (swap out placeholders like `sdX` for your actual drive name).
-- 💡 **Tip** boxes give optional but useful advice.
-- ⚠️ **Warning** boxes flag things that can break your system if rushed.
-- Every step ends with a **Why?** explanation in plain English — read these even if you just copy-paste the commands.
+- Command blocks — type these exactly, swapping placeholders like `sdX` for your real drive.
+- Tips — optional but worth doing.
+- Warnings — skip these at your own risk.
+- Each step has a short explanation of *why* you're doing it. Read those even if you're just copy-pasting.
 
-## What you'll need
+## Before you start
 
-- A USB drive (4GB+) with the Arch Linux ISO already flashed onto it (using a tool like [Rufus](https://rufus.ie))
-- A working internet connection (Wi-Fi or Ethernet)
-- About an hour, and a willingness to read error messages instead of panicking at them
+- USB drive (4GB+) flashed with the Arch ISO ([Rufus](https://rufus.ie) works fine)
+- Internet connection
+- About an hour, and enough patience to read an error message instead of panicking at it
 
-## A few words you'll see a lot
+## Vocabulary you'll run into
 
-| Term | What it means |
+| Term | Meaning |
 |---|---|
-| **Live USB / Live environment** | The temporary Arch system running off your USB drive, before anything is installed to the actual computer |
-| **Partition** | A section of your hard drive, like dividing one drawer into two compartments |
-| **Mount** | Making a partition accessible at a specific folder path, so you can read/write to it |
-| **Chroot** | "Change root" — jumping from the temporary live USB environment *into* the system you're installing, as if you'd already booted into it |
-| **Bootloader** | The program that runs first when you power on, and hands control to the Linux kernel (we're using GRUB) |
-| **Compositor** | The program that draws windows on screen and manages your desktop (Hyprland, in our case) |
-| **AUR** | The Arch User Repository — a community-run collection of build scripts for software that isn't in the official Arch repos |
+| **Live USB** | The temporary Arch environment running off your USB, before anything's installed |
+| **Partition** | A section of your drive — think dividing one drawer into compartments |
+| **Mount** | Pointing a folder path at a partition so you can read/write to it |
+| **Chroot** | Jumping from the live USB into the system you're installing, as if you'd already booted into it |
+| **Bootloader** | The thing that runs first on power-on and hands off to the kernel (GRUB, here) |
+| **Compositor** | Draws your windows and runs your desktop — that's Hyprland |
+| **AUR** | Arch User Repository — community build scripts for stuff not in the official repos |
 
-Everything below assumes you've already booted from the Arch ISO and you're staring at a terminal prompt that looks like `root@archiso ~ #`.
+Everything from here assumes you've booted the Arch ISO and you're looking at `root@archiso ~ #`.
 
-## Table of Contents
+## Contents
 
-**Part 1 — Installing Arch Linux** *(base system → bootable desktop)*
+**Part 1 — Installing Arch** *(bare drive → bootable desktop)*
 
 1. [Connect to the Internet](#1-connect-to-the-internet)
 2. [Find Your Drive](#2-find-your-drive)
@@ -42,40 +42,38 @@ Everything below assumes you've already booted from the Arch ISO and you're star
 5. [Mount the Partitions](#5-mount-the-partitions)
 6. [Install the Base System](#6-install-the-base-system)
 7. [Install Essential Packages](#7-install-essential-packages)
-8. [Generate the Filesystem Table (fstab)](#8-generate-the-filesystem-table-fstab)
-9. [Enter Your New System (chroot)](#9-enter-your-new-system-chroot)
+8. [Generate fstab](#8-generate-fstab)
+9. [Chroot In](#9-chroot-in)
 10. [Set Your Timezone](#10-set-your-timezone)
 11. [Configure Your Locale](#11-configure-your-locale)
 12. [Set Your Hostname](#12-set-your-hostname)
-13. [Configure Hosts File](#13-configure-hosts-file)
+13. [Configure Hosts](#13-configure-hosts)
 14. [Set the Root Password](#14-set-the-root-password)
-15. [Create Your Own User Account](#15-create-your-own-user-account)
-16. [Enable `sudo` for Your User](#16-enable-sudo-for-your-user)
-17. [Install the Bootloader (GRUB)](#17-install-the-bootloader-grub)
-18. [Install Hyprland and Desktop Essentials](#18-install-hyprland-and-desktop-essentials)
-19. [Enable Background Services](#19-enable-background-services)
-20. [Finish Up](#20-finish-up)
+15. [Create Your User](#15-create-your-user)
+16. [Enable sudo](#16-enable-sudo)
+17. [Install GRUB](#17-install-grub)
+18. [Install Hyprland + Desktop Essentials](#18-install-hyprland--desktop-essentials)
+19. [Enable Services](#19-enable-services)
+20. [Wrap Up](#20-wrap-up)
 21. [First Boot](#21-first-boot)
 
-**Part 2 — Post-Installation Setup** *(bare desktop → your desktop, automated)*
+**Part 2 — Everything Else**
 
 22. [Run the Dotfiles Installer](#22-run-the-dotfiles-installer)
 
 ---
 
-# Part 1 — Installing Arch Linux
+# Part 1 — Installing Arch
 
 ## 1. Connect to the Internet
 
-First, check whether you're already online:
+Check if you're already online:
 
 ```bash
 ping archlinux.org
 ```
 
-If you see replies coming back (lines with `bytes from`), you're connected — press `Ctrl+C` to stop the ping and skip to Step 2.
-
-If you're on Wi-Fi and see nothing, connect manually with `iwctl` (Arch's built-in Wi-Fi tool):
+Getting replies back? Ctrl+C and skip to Step 2. Nothing coming through on Wi-Fi? Connect manually with `iwctl`:
 
 ```bash
 iwctl
@@ -86,9 +84,9 @@ station wlan0 connect "YOUR_WIFI_NAME"
 exit
 ```
 
-> 💡 **Tip:** `device list` shows your Wi-Fi adapter's name — it's usually `wlan0`, but double-check it matches what's listed before continuing.
+`device list` shows your Wi-Fi adapter's name — usually `wlan0`, but check before you proceed.
 
-**Why?** The installer doesn't come with anything pre-downloaded — every package (the base system, the kernel, your desktop) is fetched live from Arch's servers. No internet, no install.
+Nothing in this installer is pre-downloaded. Every package gets pulled from Arch's servers live, so without a connection you're stuck here.
 
 ---
 
@@ -98,16 +96,16 @@ exit
 lsblk
 ```
 
-This lists every storage device attached to your computer, something like:
+You'll get something like:
 
 ```text
-sda        238.5G  ← an external or secondary drive
-nvme0n1    476.9G  ← usually your main internal SSD
+sda        238.5G  ← external or secondary drive
+nvme0n1    476.9G  ← usually your main SSD
 ```
 
-> ⚠️ **Warning:** Getting this wrong means installing Arch over the wrong drive and losing its data. Check the size (`238.5G`, `476.9G`, etc.) against what you know about your hardware before moving on. If unsure, unplug any drive you don't want touched.
+Get this wrong and you're wiping the wrong drive. Match the size against what you actually know about your hardware, and unplug anything you don't want touched if you're not sure.
 
-**Why?** You need to tell the installer exactly which physical drive to use — it won't guess for you.
+The installer needs to know exactly which physical drive to target — it's not going to guess.
 
 ---
 
@@ -117,18 +115,18 @@ nvme0n1    476.9G  ← usually your main internal SSD
 cfdisk /dev/sdX
 ```
 
-Replace `sdX` with your actual drive name from Step 2 (e.g. `/dev/sda` or `/dev/nvme0n1`).
+Swap in your drive from Step 2 (`/dev/sda`, `/dev/nvme0n1`, whatever it was).
 
-Inside `cfdisk`, create two partitions:
+Create two partitions:
 
 | Partition | Size | Type |
 |---|---:|---|
 | EFI System | 512 MB | EFI System |
-| Linux Filesystem | Remaining space | Linux filesystem |
+| Linux Filesystem | rest of the drive | Linux filesystem |
 
-Use the arrow keys to navigate, `[New]` to create a partition, and set the **EFI System** type on the first one. When done, select **[Write]** → type `yes` to confirm → **[Quit]**.
+Arrow keys to move, `[New]` to create, set the first one's type to EFI System. `[Write]` → `yes` → `[Quit]` when done.
 
-**Why?** The EFI partition stores the small files your motherboard's firmware needs to find and start Linux. The second, much larger partition is where Arch itself and all your files will actually live.
+The EFI partition holds the files your firmware needs to find and boot Linux. The bigger partition is where Arch and all your actual files live.
 
 ---
 
@@ -139,9 +137,9 @@ mkfs.fat -F32 /dev/sdX1
 mkfs.ext4 /dev/sdX2
 ```
 
-`sdX1` is your EFI partition, `sdX2` is your Linux filesystem partition (match the numbers `cfdisk` showed you).
+`sdX1` = EFI partition, `sdX2` = Linux partition (match whatever numbers `cfdisk` showed you).
 
-**Why?** Creating partitions just draws the boundaries — formatting is what actually lays down a filesystem (a way of organizing files) inside each one. FAT32 is required for the EFI partition by the UEFI standard; ext4 is Linux's reliable, general-purpose filesystem.
+Partitioning just draws the lines — formatting lays down an actual filesystem inside them. FAT32's required for EFI by the UEFI spec; ext4's just Linux's reliable go-to.
 
 ---
 
@@ -153,7 +151,7 @@ mkdir /mnt/boot
 mount /dev/sdX1 /mnt/boot
 ```
 
-**Why?** "Mounting" tells the live environment: *"when I write to `/mnt`, actually write to this partition."* The installer (`pacstrap`, next step) only knows how to install to `/mnt` — mounting is what connects that folder to your real drive.
+This tells the live environment "writes to `/mnt` go to this partition." `pacstrap` (next step) only knows how to install to `/mnt`, so this is what actually connects it to your real drive.
 
 ---
 
@@ -163,13 +161,13 @@ mount /dev/sdX1 /mnt/boot
 pacstrap /mnt base linux linux-firmware
 ```
 
-| Package | Purpose |
+| Package | What it's for |
 |---|---|
-| `base` | The essential command-line tools every Arch system needs |
-| `linux` | The Linux kernel — the core that talks to your hardware |
-| `linux-firmware` | Extra firmware files many devices (Wi-Fi cards, GPUs) need to function |
+| `base` | Core command-line tools every Arch box needs |
+| `linux` | The kernel |
+| `linux-firmware` | Firmware blobs for Wi-Fi cards, GPUs, etc. |
 
-**Why?** This is the actual "installation" step — everything before this was just preparing empty space. This one command downloads and copies a minimal, bootable Linux system onto your drive.
+This is the actual install — everything before was just prep. One command, and you've got a minimal bootable Linux system on disk.
 
 ---
 
@@ -179,36 +177,36 @@ pacstrap /mnt base linux linux-firmware
 pacstrap /mnt networkmanager grub efibootmgr sudo nvim zsh
 ```
 
-| Package | Purpose |
+| Package | What it's for |
 |---|---|
-| `networkmanager` | Handles Wi-Fi and Ethernet once you're no longer on the live USB |
-| `grub` | The bootloader — what actually boots into your new system |
-| `efibootmgr` | Registers GRUB with your motherboard's UEFI firmware |
-| `sudo` | Lets your regular user run administrator-level commands when needed |
-| `nvim` | A text editor for editing config files (you'll use this constantly) |
-| `zsh` | The shell itself, installed now so it's already on disk by the time you create your user account and set it as their login shell in Step 15 |
+| `networkmanager` | Wi-Fi/Ethernet once you're off the live USB |
+| `grub` | The bootloader |
+| `efibootmgr` | Registers GRUB with UEFI |
+| `sudo` | Admin commands without full root |
+| `nvim` | You'll be editing configs a lot |
+| `zsh` | Installed now so it's ready when you set it as your login shell in Step 15 |
 
-**Why?** The base system from Step 6 is deliberately minimal — it can't even connect to Wi-Fi or boot on its own yet. These packages fill in those gaps.
+The base system is deliberately bare — it can't connect to Wi-Fi or even boot yet. This fills the gaps.
 
 ---
 
-## 8. Generate the Filesystem Table (fstab)
+## 8. Generate fstab
 
 ```bash
 genfstab -U /mnt >> /mnt/etc/fstab
 ```
 
-**Why?** `fstab` is a file that tells Linux which partition to mount where, every time it boots. `genfstab` writes this automatically based on how you mounted things in Step 5 — you'd otherwise have to write it by hand.
+`fstab` tells Linux which partition mounts where on every boot. `genfstab` writes it automatically from how you mounted things in Step 5, instead of you doing it by hand.
 
 ---
 
-## 9. Enter Your New System (chroot)
+## 9. Chroot In
 
 ```bash
 arch-chroot /mnt
 ```
 
-**Why?** So far you've been working *from* the live USB, treating `/mnt` as a subfolder. `arch-chroot` jumps you *inside* the system you just installed, so from here on, commands run as if you'd actually booted into your new Arch install — because for all practical purposes, you now have.
+Up to now you've been working *from* the live USB, treating `/mnt` as a subfolder. This jumps you inside the system you just installed — commands from here run as if you'd actually booted into it.
 
 ---
 
@@ -219,9 +217,9 @@ ln -sf /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
 hwclock --systohc
 ```
 
-Replace `Asia/Jakarta` with your own region — run `ls /usr/share/zoneinfo` to browse available options.
+Swap `Asia/Jakarta` for your own region (`ls /usr/share/zoneinfo` to browse).
 
-**Why?** This tells Linux what time zone to display clocks in, and syncs your hardware clock so the time stays correct after reboot.
+Sets what timezone your clock displays, and syncs the hardware clock so time survives a reboot.
 
 ---
 
@@ -231,16 +229,14 @@ Replace `Asia/Jakarta` with your own region — run `ls /usr/share/zoneinfo` to 
 nvim /etc/locale.gen
 ```
 
-Find the line `#en_US.UTF-8 UTF-8` and remove the `#` at the start to uncomment it. Save and quit (`:wq`).
-
-Then:
+Find `#en_US.UTF-8 UTF-8`, strip the `#`, save and quit (`:wq`).
 
 ```bash
 locale-gen
 echo "LANG=en_US.UTF-8" > /etc/locale.conf
 ```
 
-**Why?** "Locale" controls language, character encoding, and formatting (dates, currency, etc.) system-wide. Uncommenting a locale in `locale.gen` tells Arch to actually generate that language pack; `locale.conf` tells the system which one to use by default.
+Locale controls language, encoding, and formatting system-wide. Uncommenting in `locale.gen` tells Arch to actually build that language pack; `locale.conf` sets it as default.
 
 ---
 
@@ -250,17 +246,15 @@ echo "LANG=en_US.UTF-8" > /etc/locale.conf
 echo "arch" > /etc/hostname
 ```
 
-**Why?** The hostname is your machine's name on a network — useful for identifying it, especially if you have more than one computer around.
+Your machine's name on a network — mostly useful once you've got more than one box around.
 
 ---
 
-## 13. Configure Hosts File
+## 13. Configure Hosts
 
 ```bash
 nvim /etc/hosts
 ```
-
-Add these three lines:
 
 ```text
 127.0.0.1 localhost
@@ -268,7 +262,7 @@ Add these three lines:
 127.0.1.1 arch.localdomain arch
 ```
 
-**Why?** This lets your own machine resolve its own hostname locally, without needing to ask a DNS server — some programs expect this to work even with no internet.
+Lets your machine resolve its own hostname locally without a DNS server — some programs expect this even offline.
 
 ---
 
@@ -278,142 +272,138 @@ Add these three lines:
 passwd
 ```
 
-You'll be prompted to type a password twice (it won't show on screen — that's normal).
+Type it twice, nothing shows on screen (that's normal, not broken).
 
-**Why?** `root` is Arch's built-in administrator account. Right now it has no password at all, which is a security hole you're closing here.
+Right now root has no password at all — this closes that hole.
 
 ---
 
-## 15. Create Your Own User Account
+## 15. Create Your User
 
 ```bash
 useradd -m -G wheel -s /bin/zsh excello
 passwd excello
 ```
 
-Replace `excello` with whatever username you want.
+Swap `excello` for whatever username you want.
 
-**Why?** You shouldn't do your daily computing as `root` — one typo could wreck your whole system. `-m` creates a home folder for this user, `-G wheel` puts them in the `wheel` group (needed for admin permissions, next step), and `-s /bin/zsh` sets zsh as their shell right away, since Step 7 already installed it.
+Don't daily-drive as root — one typo and you've wrecked something. `-m` makes a home folder, `-G wheel` adds you to the group that'll get sudo access next step, `-s /bin/zsh` sets your shell since it's already installed.
 
 ---
 
-## 16. Enable `sudo` for Your User
+## 16. Enable sudo
 
 ```bash
 EDITOR=nvim visudo
 ```
 
-Find the line `# %wheel ALL=(ALL:ALL) ALL` and remove the `#`. Save and quit.
+Find `# %wheel ALL=(ALL:ALL) ALL`, uncomment it, save and quit.
 
-> ⚠️ **Warning:** Always edit this file with `visudo`, never a plain text editor — it checks your syntax before saving, so a typo can't lock you out of `sudo` entirely.
+Always use `visudo` here, never a plain editor — it validates syntax before saving so a typo can't lock you out of sudo entirely.
 
-**Why?** This tells Linux "anyone in the `wheel` group can use `sudo`." Since your user is in `wheel` (Step 15), this is what lets you run admin commands like `sudo pacman -Syu` instead of switching to `root` every time.
+This is what lets `wheel` group members run sudo instead of switching to root every time.
 
 ---
 
-## 17. Install the Bootloader (GRUB)
+## 17. Install GRUB
 
 ```bash
 grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
 grub-mkconfig -o /boot/grub/grub.cfg
 ```
 
-**Why?** Installing the `grub` package (Step 7) only put the program on disk — these two commands actually register it with your UEFI firmware and generate its boot menu configuration. Without this, your computer has no idea how to start Linux at all.
+Installing the package in Step 7 only put GRUB on disk — this actually registers it with your firmware and builds the boot menu. Skip it and your machine has no idea how to start Linux.
 
 ---
 
-## 18. Install Hyprland and Desktop Essentials
+## 18. Install Hyprland + Desktop Essentials
 
 ```bash
 pacman -S hyprland hyprpaper hyprpolkitagent xdg-desktop-portal-hyprland sddm pipewire pipewire-pulse wireplumber kitty zsh-syntax-highlighting zsh-autosuggestions starship waybar swaync wofi firefox ttf-jetbrains-mono-nerd grim wl-clipboard nvim yazi fzf bat zoxide eza fastfetch
 ```
 
-Grouped by what each thing does:
-
-**Desktop itself**
-| Package | Purpose |
+**Desktop**
+| Package | What it's for |
 |---|---|
-| `hyprland` | The Wayland compositor — this *is* your desktop environment |
-| `hyprpaper` | Sets your wallpaper |
-| `hyprpolkitagent` | Handles password prompts for admin actions triggered from GUI apps |
-| `xdg-desktop-portal-hyprland` | Lets Wayland-aware screen-sharing (Discord, OBS) and native file-picker dialogs work correctly; pulls in the base `xdg-desktop-portal` framework as a dependency |
+| `hyprland` | The compositor — this is the desktop |
+| `hyprpaper` | Wallpaper |
+| `hyprpolkitagent` | Password prompts from GUI apps |
+| `xdg-desktop-portal-hyprland` | Screen-sharing and native file pickers on Wayland; pulls in `xdg-desktop-portal` |
 
-**Login screen**
-| Package | Purpose |
+**Login**
+| Package | What it's for |
 |---|---|
-| `sddm` | The graphical login screen you'll see on every boot |
+| `sddm` | Graphical login screen |
 
 **Audio**
-| Package | Purpose |
+| Package | What it's for |
 |---|---|
-| `pipewire` | Modern Linux audio server |
-| `pipewire-pulse` | Compatibility layer so apps expecting PulseAudio still work |
-| `wireplumber` | Manages audio devices and routing behind the scenes |
+| `pipewire` | Audio server |
+| `pipewire-pulse` | PulseAudio compatibility |
+| `wireplumber` | Device management and routing |
 
 **Terminal & shell**
-| Package | Purpose |
+| Package | What it's for |
 |---|---|
-| `kitty` | A fast, GPU-accelerated terminal emulator |
-| `zsh-syntax-highlighting` | Colors commands as valid/invalid while typing |
-| `zsh-autosuggestions` | Ghost-text command suggestions as you type |
-| `starship` | A customizable, informative shell prompt |
+| `kitty` | GPU-accelerated terminal |
+| `zsh-syntax-highlighting` | Live command validity coloring |
+| `zsh-autosuggestions` | Ghost-text history suggestions |
+| `starship` | Shell prompt |
 
 **Bar**
-| Package | Purpose |
+| Package | What it's for |
 |---|---|
-| `waybar` | The status bar along the top/bottom of your screen |
+| `waybar` | Status bar |
 
 **Notifications & launcher**
-| Package | Purpose |
+| Package | What it's for |
 |---|---|
-| `swaync` | Notification daemon and notification center — pops up notifications and gives you a panel to review/clear them |
-| `wofi` | An application launcher and general-purpose menu (for launching apps, and for menus other tools can pipe into) |
+| `swaync` | Notification daemon + center |
+| `wofi` | App launcher / menu |
 
 **Browser**
-| Package | Purpose |
+| Package | What it's for |
 |---|---|
-| `firefox` | A full-featured web browser — nothing web-related is installed by default, so this is what you'll actually use to get online once you're past the terminal |
+| `firefox` | Nothing web-related ships by default, this is how you get online |
 
 **Fonts**
-| Package | Purpose |
+| Package | What it's for |
 |---|---|
-| `ttf-jetbrains-mono-nerd` | A coding font patched with icons (needed for waybar/kitty icons to render, and for `eza`'s icons) |
+| `ttf-jetbrains-mono-nerd` | Icon font for waybar, kitty, eza |
 
 **Screenshots & clipboard**
-| Package | Purpose |
+| Package | What it's for |
 |---|---|
-| `grim` | Takes screenshots from the command line — the Wayland equivalent of a screenshot tool |
-| `wl-clipboard` | Command-line clipboard access (`wl-copy` / `wl-paste`) — Wayland's equivalent of `xclip` |
+| `grim` | Command-line screenshots |
+| `wl-clipboard` | Wayland clipboard access |
 
 **CLI tools**
-| Package | Purpose |
+| Package | What it's for |
 |---|---|
-| `nvim` | Text editor |
+| `nvim` | Editor |
 | `yazi` | Terminal file manager |
-| `fzf` | Fuzzy finder for files, history, and more |
-| `bat` | A nicer `cat`, with syntax highlighting |
-| `zoxide` | A smarter `cd` that learns your most-used directories and jumps to them by typing just part of the name |
-| `eza` | A modern replacement for `ls`, with colors, icons, and a built-in tree view |
-| `fastfetch` | Prints a system-info summary with ASCII art |
+| `fzf` | Fuzzy finder |
+| `bat` | `cat` with syntax highlighting |
+| `zoxide` | Smarter `cd` |
+| `eza` | Modern `ls` |
+| `fastfetch` | System-info banner |
 
-> 💡 **Tip:** This one command installs everything at once. If it fails partway through (e.g. a mirror timing out), just re-run the same command — `pacman` skips anything already installed.
-
-**Why this order?** Each layer depends on the one above it conceptually: the compositor needs to exist before a login manager can launch it, audio needs to exist before a terminal cares about it, and fonts need to be present before the bar/terminal can render icons correctly.
+One command installs everything. If a mirror times out partway through, just rerun it — `pacman` skips what's already there.
 
 ---
 
-## 19. Enable Background Services
+## 19. Enable Services
 
 ```bash
 systemctl enable NetworkManager
 systemctl enable sddm
 ```
 
-**Why?** Installing a package doesn't automatically make it start on boot — `systemctl enable` is what schedules a service to launch every time you power on. Without this, you'd have no networking and no login screen after rebooting.
+Installing a package doesn't start it on boot — this schedules both to launch every time you power on. Skip it, no networking and no login screen after reboot.
 
 ---
 
-## 20. Finish Up
+## 20. Wrap Up
 
 ```bash
 exit
@@ -421,9 +411,9 @@ umount -R /mnt
 poweroff
 ```
 
-Once it powers off, physically remove your USB drive.
+Pull the USB once it powers off.
 
-**Why?** `exit` leaves the chroot environment, `umount -R /mnt` safely detaches your new system's partitions (skipping this can corrupt files), and `poweroff` shuts the machine down cleanly so you can boot from the actual drive next.
+`exit` leaves the chroot, `umount -R /mnt` detaches the partitions cleanly (skip it and risk corruption), `poweroff` shuts down so you can boot the real drive next.
 
 ---
 
@@ -433,15 +423,15 @@ Once it powers off, physically remove your USB drive.
 Power Button → UEFI → GRUB → SDDM → Hyprland → Desktop
 ```
 
-If you land on the SDDM login screen, log in with the user you created in Step 15. You should land on a mostly-empty Hyprland desktop — that's expected.
+Log in with the user from Step 15. You'll land on a mostly-empty Hyprland desktop — that's expected, that's the point of Part 2.
 
 ---
 
-# Part 2 — Post-Installation Setup
+# Part 2 — Everything Else
 
 ## 22. Run the Dotfiles Installer
 
-These are my personal dotfiles, and I'd recommend them for getting the rest of your desktop set up — wallpaper, waybar, wofi, kitty theme, keybinds, shell config, AUR helper, all of it. Open a terminal on your fresh desktop and run:
+These are my own dotfiles, and I'd genuinely recommend them for the rest of the setup — wallpaper, waybar, wofi, kitty theme, keybinds, shell config, AUR helper, all of it. Fire up a terminal on your fresh desktop and run:
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/excellogalihs/friedrice/main/install.sh)
@@ -449,4 +439,4 @@ bash <(curl -fsSL https://raw.githubusercontent.com/excellogalihs/friedrice/main
 
 ---
 
-That's the whole setup, start to finish: a booted, working Arch install with Hyprland, ready to be finished off by the installer script above.
+That's it — a booted, working Arch + Hyprland install, ready for the installer script above to finish the job.
