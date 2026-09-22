@@ -1,6 +1,6 @@
 # Arch Linux + Hyprland Install Guide
 
-Blank drive to a working Arch + Hyprland desktop. No prior Arch experience needed, just patience.
+Blank drive to a working Arch + Gnome desktop. No prior Arch experience needed, just patience.
 
 > Coming from Ubuntu or Fedora? Arch skips the graphical installer entirely — no "click Next 5 times." You're typing commands one at a time and reading what they spit back at you. Sounds intimidating, isn't really. This guide tells you what each command actually does, not just what to paste.
 
@@ -25,15 +25,15 @@ Blank drive to a working Arch + Hyprland desktop. No prior Arch experience neede
 | **Partition** | A section of your drive — think dividing one drawer into compartments |
 | **Mount** | Pointing a folder path at a partition so you can read/write to it |
 | **Chroot** | Jumping from the live USB into the system you're installing, as if you'd already booted into it |
-| **Bootloader** | The thing that runs first on power-on and hands off to the kernel (GRUB, here) |
-| **Compositor** | Draws your windows and runs your desktop — that's Hyprland |
+| **Bootloader** | The thing that runs first on power-on and hands off to the kernel (GRUB) |
+| **Desktop Environment** | Draws your windows and runs your desktop — that's Gnome |
 | **AUR** | Arch User Repository — community build scripts for stuff not in the official repos |
 
 Everything from here assumes you've booted the Arch ISO and you're looking at `root@archiso ~ #`.
 
 ## Contents
 
-**Part 1 — Installing Arch** *(bare drive → bootable desktop)*
+**Installing Arch** *(bare drive → bootable desktop)*
 
 1. [Connect to the Internet](#1-connect-to-the-internet)
 2. [Find Your Drive](#2-find-your-drive)
@@ -52,14 +52,10 @@ Everything from here assumes you've booted the Arch ISO and you're looking at `r
 15. [Create Your User](#15-create-your-user)
 16. [Enable sudo](#16-enable-sudo)
 17. [Install GRUB](#17-install-grub)
-18. [Install Hyprland + Desktop Essentials](#18-install-hyprland--desktop-essentials)
+18. [Install Gnome + Desktop Essentials](#18-install-hyprland--desktop-essentials)
 19. [Enable Services](#19-enable-services)
 20. [Wrap Up](#20-wrap-up)
 21. [First Boot](#21-first-boot)
-
-**Part 2 — Everything Else**
-
-22. [Run the Dotfiles Installer](#22-run-the-dotfiles-installer)
 
 ---
 
@@ -174,16 +170,16 @@ This is the actual install — everything before was just prep. One command, and
 ## 7. Install Essential Packages
 
 ```bash
-pacstrap /mnt networkmanager grub efibootmgr sudo nvim zsh
+pacstrap /mnt efibootmgr grub networkmanager nvim sudo zsh
 ```
 
 | Package | What it's for |
 |---|---|
-| `networkmanager` | Wi-Fi/Ethernet once you're off the live USB |
-| `grub` | The bootloader |
 | `efibootmgr` | Registers GRUB with UEFI |
-| `sudo` | Admin commands without full root |
+| `grub` | The bootloader |
+| `networkmanager` | Wi-Fi/Ethernet once you're off the live USB |
 | `nvim` | You'll be editing configs a lot |
+| `sudo` | Admin commands without full root |
 | `zsh` | Installed now so it's ready when you set it as your login shell in Step 15 |
 
 The base system is deliberately bare — it can't connect to Wi-Fi or even boot yet. This fills the gaps.
@@ -233,8 +229,10 @@ Find `#en_US.UTF-8 UTF-8`, strip the `#`, save and quit (`:wq`).
 
 ```bash
 locale-gen
-echo "LANG=en_US.UTF-8" > /etc/locale.conf
+nvim /etc/locale.conf
 ```
+
+Write LANG=en_US.UTF-8 in the file and save it with :wq
 
 Locale controls language, encoding, and formatting system-wide. Uncommenting in `locale.gen` tells Arch to actually build that language pack; `locale.conf` sets it as default.
 
@@ -281,11 +279,11 @@ Right now root has no password at all — this closes that hole.
 ## 15. Create Your User
 
 ```bash
-useradd -m -G wheel -s /bin/zsh excello
-passwd excello
+useradd -m -G wheel -s /bin/zsh user
+passwd user
 ```
 
-Swap `excello` for whatever username you want.
+Swap `user` for whatever username you want.
 
 Don't daily-drive as root — one typo and you've wrecked something. `-m` makes a home folder, `-G wheel` adds you to the group that'll get sudo access next step, `-s /bin/zsh` sets your shell since it's already installed.
 
@@ -319,74 +317,20 @@ Installing the package in Step 7 only put GRUB on disk — this actually registe
 ## 18. Install Hyprland + Desktop Essentials
 
 ```bash
-pacman -S hyprland hyprpaper hyprpolkitagent xdg-desktop-portal-hyprland sddm pipewire pipewire-pulse wireplumber kitty zsh-syntax-highlighting zsh-autosuggestions starship waybar swaync wofi firefox ttf-jetbrains-mono-nerd grim wl-clipboard nvim yazi fzf bat zoxide eza fastfetch
+pacman -S gdm gnome-shell gnome-control-center gnome-tweaks pipewire pipewire-pulse wireplumber firefox
 ```
 
-**Desktop**
+**Packages Description**
 | Package | What it's for |
 |---|---|
-| `hyprland` | The compositor — this is the desktop |
-| `hyprpaper` | Wallpaper |
-| `hyprpolkitagent` | Password prompts from GUI apps |
-| `xdg-desktop-portal-hyprland` | Screen-sharing and native file pickers on Wayland; pulls in `xdg-desktop-portal` |
-
-**Login**
-| Package | What it's for |
-|---|---|
-| `sddm` | Graphical login screen |
-
-**Audio**
-| Package | What it's for |
-|---|---|
+| `gdm` | Graphical login screen |
+| `gnome-shell` | The core of the desktop |
+| `gnome-control-center` | The settings app and others |
+| `gnome-tweaks` | For deaper customization |
 | `pipewire` | Audio server |
 | `pipewire-pulse` | PulseAudio compatibility |
 | `wireplumber` | Device management and routing |
-
-**Terminal & shell**
-| Package | What it's for |
-|---|---|
-| `kitty` | GPU-accelerated terminal |
-| `zsh-syntax-highlighting` | Live command validity coloring |
-| `zsh-autosuggestions` | Ghost-text history suggestions |
-| `starship` | Shell prompt |
-
-**Bar**
-| Package | What it's for |
-|---|---|
-| `waybar` | Status bar |
-
-**Notifications & launcher**
-| Package | What it's for |
-|---|---|
-| `swaync` | Notification daemon + center |
-| `wofi` | App launcher / menu |
-
-**Browser**
-| Package | What it's for |
-|---|---|
-| `firefox` | Nothing web-related ships by default, this is how you get online |
-
-**Fonts**
-| Package | What it's for |
-|---|---|
-| `ttf-jetbrains-mono-nerd` | Icon font for waybar, kitty, eza |
-
-**Screenshots & clipboard**
-| Package | What it's for |
-|---|---|
-| `grim` | Command-line screenshots |
-| `wl-clipboard` | Wayland clipboard access |
-
-**CLI tools**
-| Package | What it's for |
-|---|---|
-| `nvim` | Editor |
-| `yazi` | Terminal file manager |
-| `fzf` | Fuzzy finder |
-| `bat` | `cat` with syntax highlighting |
-| `zoxide` | Smarter `cd` |
-| `eza` | Modern `ls` |
-| `fastfetch` | System-info banner |
+| `firefox` | An ordinary browser |
 
 One command installs everything. If a mirror times out partway through, just rerun it — `pacman` skips what's already there.
 
@@ -395,8 +339,8 @@ One command installs everything. If a mirror times out partway through, just rer
 ## 19. Enable Services
 
 ```bash
+systemctl enable gdm
 systemctl enable NetworkManager
-systemctl enable sddm
 ```
 
 Installing a package doesn't start it on boot — this schedules both to launch every time you power on. Skip it, no networking and no login screen after reboot.
@@ -420,23 +364,11 @@ Pull the USB once it powers off.
 ## 21. First Boot
 
 ```text
-Power Button → UEFI → GRUB → SDDM → Hyprland → Desktop
+Power Button → UEFI → GRUB → GDM → Gnome
 ```
 
 Log in with the user from Step 15. You'll land on a mostly-empty Hyprland desktop — that's expected, that's the point of Part 2.
 
 ---
 
-# Part 2 — Everything Else
-
-## 22. Run the Dotfiles Installer
-
-These are my own dotfiles, and I'd genuinely recommend them for the rest of the setup — wallpaper, waybar, wofi, kitty theme, keybinds, shell config, AUR helper, all of it. Fire up a terminal on your fresh desktop and run:
-
-```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/excellogalihs/friedrice/main/install.sh)
-```
-
----
-
-That's it — a booted, working Arch + Hyprland install, ready for the installer script above to finish the job.
+That's it — a booted, working Arch + Gnome install.
