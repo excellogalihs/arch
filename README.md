@@ -1,4 +1,4 @@
-# Arch Linux + Hyprland Install Guide
+# Arch Linux + Gnome Install Guide
 
 Blank drive to a working Arch + Gnome desktop. No prior Arch experience needed, just patience.
 
