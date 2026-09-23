@@ -59,8 +59,6 @@ Everything from here assumes you've booted the Arch ISO and you're looking at `r
 
 ---
 
-# Part 1 — Installing Arch
-
 ## 1. Connect to the Internet
 
 Check if you're already online:
